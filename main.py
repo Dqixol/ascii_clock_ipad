@@ -135,15 +135,15 @@ def main():
             lunar_date_art = colour_art(remove_trailing_newlines(centre_art(assemble_chinese_date(lunar_date.month, lunar_date.day), width-1), 4), bcolors.YELLOW)
             print(date_art + lunar_date_art)
         time_str = datetime.datetime.now() .strftime("%H : %M")
-        time_art = colour_art(remove_trailing_newlines(centre_art(             text2art(time_str,        font='colossal'), width-1), 1), bcolors.GREEN)
-        if not dot_printed:
-            dot_printed = True
-        else: 
-            time_art = remove_dots(time_art)
-            dot_printed = False
+        time_art = colour_art(remove_trailing_newlines(centre_art(             text2art(time_str,        font='colossal'), width-1), 0), bcolors.GREEN)
+        # if not dot_printed:
+        #     dot_printed = True
+        # else: 
+        #     time_art = remove_dots(time_art)
+        #     dot_printed = False
         print(time_art)
         sleep(60)
-        sys.stdout.write('\033[10A')
+        sys.stdout.write('\033[9A')
         sys.stdout.flush()
 
 
