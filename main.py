@@ -3,6 +3,7 @@ from time import sleep
 import datetime
 import os
 from lunardate import LunarDate
+import sys
 
 class bcolors:
     RED = '\033[0;91m'
@@ -94,7 +95,8 @@ def determine_th_st_nd_rd(day):
         return ["st", "nd", "rd"][day % 10 - 1]
 
 def remove_trailing_newlines(art, num_newlines=2):
-    art = art.rstrip().rstrip("\n")
+    art = art.rstrip()
+    art = art + " "* 5
     art = art + "\n"*num_newlines
     return art
 
@@ -107,24 +109,42 @@ def colour_art(art, color):
     colored_art = f"{color}{bcolors.BOLD}{art}{bcolors.ENDC}" 
     return colored_art
 
+def remove_dots(art):
+    return art.replace(" d8b ", "     ").replace(" Y8P ", "     ")
+
 def main():
+    os.system('clear')
+    date_str = None
+    width_saved, height_saved = os.get_terminal_size()
+    dot_printed = False
+    flag_resize = False
     while True:
         width, height = os.get_terminal_size()
+        if (width, height) != (width_saved, height_saved):
+            flag_resize = True
         if width < 100 or height < 30:
             print(f"({width}x{height}) Please resize your terminal to at least 100x30 for optimal display.") 
-            sleep(1) 
+            sleep(1)
+            os.system('clear') 
             continue
-
-        date_str = datetime.datetime.now() .strftime(f"%d{determine_th_st_nd_rd(datetime.datetime.now().day)}  %b") 
-        lunar_date = LunarDate.today()
+        if flag_resize or ((not date_str) or (date_str != datetime.datetime.now().strftime(f"%d{determine_th_st_nd_rd(datetime.datetime.now().day)}  %b"))):
+            os.system('clear')
+            date_str = datetime.datetime.now() .strftime(f"%d{determine_th_st_nd_rd(datetime.datetime.now().day)}  %b") 
+            lunar_date = LunarDate.today()
+            date_art       = colour_art(remove_trailing_newlines(centre_art(             text2art(date_str,        font='colossal'), width-1), 4), bcolors.WHITE)
+            lunar_date_art = colour_art(remove_trailing_newlines(centre_art(assemble_chinese_date(lunar_date.month, lunar_date.day), width-1), 4), bcolors.YELLOW)
+            print(date_art + lunar_date_art)
         time_str = datetime.datetime.now() .strftime("%H : %M : %S")
-
-        date_art       = colour_art(remove_trailing_newlines(centre_art(             text2art(date_str,        font='colossal'), width-2), 4), bcolors.WHITE)
-        lunar_date_art = colour_art(remove_trailing_newlines(centre_art(assemble_chinese_date(lunar_date.month, lunar_date.day), width-2), 4), bcolors.YELLOW)
-        time_art       = colour_art(remove_trailing_newlines(centre_art(             text2art(time_str,        font='colossal'), width-2), 0), bcolors.GREEN)
-        os.system('clear')
-        print(date_art + lunar_date_art + time_art)
-        sleep(5)
+        time_art = colour_art(remove_trailing_newlines(centre_art(             text2art(time_str,        font='colossal'), width-1), 2), bcolors.GREEN)
+        if not dot_printed:
+            dot_printed = True
+        else: 
+            time_art = remove_dots(time_art)
+            dot_printed = False
+        print(time_art)
+        sleep(1)
+        sys.stdout.write('\033[10A')
+        sys.stdout.flush()
 
 
 if __name__ == "__main__":
