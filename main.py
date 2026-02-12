@@ -112,7 +112,7 @@ def main():
         os.system('clear')
         width, height = os.get_terminal_size()
         if width < 100 or height < 30:
-            print("Please resize your terminal to at least 100x30 for optimal display.") 
+            print(f"({width}x{height}) Please resize your terminal to at least 100x30 for optimal display.") 
             sleep(1) 
             continue
 
@@ -120,9 +120,9 @@ def main():
         lunar_date = LunarDate.today()
         time_str = datetime.datetime.now() .strftime("%H : %M : %S")
 
-        date_art       = colour_art(remove_trailing_newlines(centre_art(             text2art(date_str,        font='colossal'), width), 4), bcolors.WHITE)
-        lunar_date_art = colour_art(remove_trailing_newlines(centre_art(assemble_chinese_date(lunar_date.month, lunar_date.day), width), 4), bcolors.YELLOW)
-        time_art       = colour_art(remove_trailing_newlines(centre_art(             text2art(time_str,        font='colossal'), width), 0), bcolors.GREEN)
+        date_art       = colour_art(remove_trailing_newlines(centre_art(             text2art(date_str,        font='colossal'), width-2), 4), bcolors.WHITE)
+        lunar_date_art = colour_art(remove_trailing_newlines(centre_art(assemble_chinese_date(lunar_date.month, lunar_date.day), width-2), 4), bcolors.YELLOW)
+        time_art       = colour_art(remove_trailing_newlines(centre_art(             text2art(time_str,        font='colossal'), width-2), 0), bcolors.GREEN)
         print(date_art + lunar_date_art + time_art)
         sleep(5)
 
