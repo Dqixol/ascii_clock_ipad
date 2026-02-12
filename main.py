@@ -132,18 +132,18 @@ def main():
             date_str = datetime.datetime.now() .strftime(f"%d{determine_th_st_nd_rd(datetime.datetime.now().day)}  %b") 
             lunar_date = LunarDate.today()
             date_art       = colour_art(remove_trailing_newlines(centre_art(             text2art(date_str,        font='colossal'), width-1), 4), bcolors.WHITE)
-            lunar_date_art = colour_art(remove_trailing_newlines(centre_art(assemble_chinese_date(lunar_date.month, lunar_date.day), width-1), 4), bcolors.YELLOW)
-            print(date_art + lunar_date_art)
+            lunar_date_art = colour_art(remove_trailing_newlines(centre_art(assemble_chinese_date(lunar_date.month, lunar_date.day), width-1), 3), bcolors.YELLOW)
+            print('\n' + date_art + lunar_date_art)
         time_str = datetime.datetime.now() .strftime("%H : %M")
         time_art = colour_art(remove_trailing_newlines(centre_art(             text2art(time_str,        font='colossal'), width-1), 0), bcolors.GREEN)
-        # if not dot_printed:
-        #     dot_printed = True
-        # else: 
-        #     time_art = remove_dots(time_art)
-        #     dot_printed = False
+        if not dot_printed:
+            dot_printed = True
+        else: 
+            time_art = remove_dots(time_art)
+            dot_printed = False
         print(time_art)
         sleep(60)
-        sys.stdout.write('\033[9A')
+        sys.stdout.write('\033[8A')
         sys.stdout.flush()
 
 
