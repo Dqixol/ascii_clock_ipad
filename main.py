@@ -155,28 +155,28 @@ def main():
         date_art       = text2art(date_str, font='colossal')
         lunar_date = LunarDate.today()
         lunar_date_str = getLunarChineseChars(lunar_date.month, lunar_date.day)
-        lunar_date_art = (lunar_date_str + '\n')* 8
+        lunar_date_art = ' \n'*7 + (lunar_date_str + '\n')
 
         # lunar_date_art = colour_art(remove_trailing_newlines(centre_art(assemble_chinese_date(lunar_date.month, lunar_date.day), width-1), 3), bcolors.YELLOW)
-        print('\n' + colour_art(combine_arts(['                  \n'* 8, date_art, '   │     \n'*8, lunar_date_art]), bcolors.CYAN) + '\n\n')
+        print('\n' + colour_art(combine_arts(['                  \n'* 8, date_art, '   │    \n'*8, lunar_date_art]), bcolors.CYAN) + '\n\n')
         try:
             print(centre_art(location, width-1))
-            print(combine_arts([' \n'* 10, weather_forcast])+'\n\n')
+            print(combine_arts([' \n'* 10, weather_forcast])+'\n\n\n')
         except:
             print('\n' + centre_art("Failed to get weather data, will retry", width-1))
         time_str = datetime.datetime.now() .strftime("%H : %M")
         time_art = text2art(time_str,        font='colossal')
-        if not dot_printed:
-            dot_printed = True
-        else: 
-            time_art = remove_dots(time_art)
-            dot_printed = False
+        # if not dot_printed:
+        #     dot_printed = True
+        # else: 
+        #     time_art = remove_dots(time_art)
+        #     dot_printed = False
         try: 
             weather_now_print = f'                Updated {(datetime.datetime.now() - last_weather_update).total_seconds():.0f}s ago\n' + weather_now
             print(combine_arts(['                  \n'* 8, time_art, '   │\n'*8, '\n'*2+weather_now_print]))
         except:
             print(combine_arts(['                  \n'* 8, time_art]))
-        sleep(1)
+        sleep(60)
         
 if __name__ == "__main__":
     main()
