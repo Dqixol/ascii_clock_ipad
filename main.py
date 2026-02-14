@@ -158,10 +158,10 @@ def main():
         lunar_date_art = ' \n'*7 + (lunar_date_str + '\n')
 
         # lunar_date_art = colour_art(remove_trailing_newlines(centre_art(assemble_chinese_date(lunar_date.month, lunar_date.day), width-1), 3), bcolors.YELLOW)
-        print('\n' + colour_art(combine_arts(['                  \n'* 8, date_art, '   │    \n'*8, lunar_date_art]), bcolors.CYAN) + '\n\n')
+        print('\n' + colour_art(combine_arts(['                  \n'* 8, date_art, '   │    \n'*8, lunar_date_art]), bcolors.CYAN) + '\n')
         try:
             print(centre_art(location, width-1))
-            print(combine_arts([' \n'* 10, weather_forcast])+'\n\n\n')
+            print(combine_arts([' \n'* 10, weather_forcast])+'\n\n')
         except:
             print('\n' + centre_art("Failed to get weather data, will retry", width-1))
         time_str = datetime.datetime.now() .strftime("%H : %M")
