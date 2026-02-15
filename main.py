@@ -141,10 +141,10 @@ def getLunarChineseChars(month, day):
 def main():
     date_str = None
     dot_printed = False
-    last_weather_update = now - datetime.timedelta(days=1)
     latest_weather = ('\n'*5 + '         Weather data unavailable\n', '', 'Unknown Location')
     while True:
         now = datetime.datetime.now()
+        last_weather_update = now - datetime.timedelta(days=1)
         width, height = os.get_terminal_size()
         if width != 128 or height != 44:
             print('\n'*int(height / 2 - 1) + f"({width}x{height}) Please resize your terminal to exactly 128*44") 
