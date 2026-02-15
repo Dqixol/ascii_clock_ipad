@@ -155,8 +155,7 @@ def main():
             weather_now, weather_forcast, location = getWeather()
             if location != "Unknown Location":
                 last_weather_update = now
-                weather_now_print = f'                Updated {(now - last_weather_update).total_seconds() / 60.0:.0f}min ago\n' + weather_now
-                latest_weather = (weather_now_print, weather_forcast, location)
+                latest_weather = (weather_now, weather_forcast, location)
         date_str = now .strftime(f"%a  %d{determine_th_st_nd_rd(now.day)}  %b") 
         date_art       = text2art(date_str, font='colossal')
         lunar_date = LunarDate.today()
@@ -170,7 +169,8 @@ def main():
             dot_printed = False
             dot_str = "   "
         time_art = text2art(f'{hour_str}{dot_str}{minute_str}', font='colossal')
-        weather_now_print, weather_forcast, location = latest_weather
+        weather_now, weather_forcast, location = latest_weather
+        weather_now_print = f'                Updated {(now - last_weather_update).total_seconds() / 60.0:.0f}min ago\n' + weather_now
         print_part_date = '\n' * (1 if location != "Unknown Location" else 10) + colour_art(centre_art(combine_arts([date_art, "\n"*8]), width-1), bcolors.CYAN) + '\n\n'
         print_part_time = combine_arts(['                  \n'* 8, time_art, '   │\n'*8, '\n'*2+weather_now_print]) + '\n\n'
         print_part_weat = combine_arts([' \n'* 20, weather_forcast]) + '\n\n'
