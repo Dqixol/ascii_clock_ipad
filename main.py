@@ -171,7 +171,7 @@ def main():
             dot_str = "   "
         time_art = text2art(f'{hour_str}{dot_str}{minute_str}', font='colossal')
         weather_now_print, weather_forcast, location = latest_weather
-        print_part_date = '\n' * (2 if location != "Unknown Location" else 10) + colour_art(centre_art(combine_arts([date_art, "\n"*8]), width-1), bcolors.CYAN) + '\n\n'
+        print_part_date = '\n' * (1 if location != "Unknown Location" else 10) + colour_art(centre_art(combine_arts([date_art, "\n"*8]), width-1), bcolors.CYAN) + '\n\n'
         print_part_time = combine_arts(['                  \n'* 8, time_art, '   │\n'*8, '\n'*2+weather_now_print]) + '\n\n'
         print_part_weat = combine_arts([' \n'* 20, weather_forcast]) + '\n\n'
         print_part_loca = centre_art(f'{location.strip()}, {lunar_date_str}', width-1)
