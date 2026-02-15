@@ -154,9 +154,9 @@ def main():
         if now - last_weather_update > datetime.timedelta(minutes=30):
             weather_now, weather_forcast, location = getWeather()
             if location != "Unknown Location":
+                last_weather_update = now
                 weather_now_print = f'                Updated {(now - last_weather_update).total_seconds() / 60.0:.0f}min ago\n' + weather_now
                 latest_weather = (weather_now_print, weather_forcast, location)
-                last_weather_update = now
         date_str = now .strftime(f"%a  %d{determine_th_st_nd_rd(now.day)}  %b") 
         date_art       = text2art(date_str, font='colossal')
         lunar_date = LunarDate.today()
@@ -172,10 +172,10 @@ def main():
         time_art = text2art(f'{hour_str}{dot_str}{minute_str}', font='colossal')
         weather_now_print, weather_forcast, location = latest_weather
         print_part_date = '\n' * (2 if location != "Unknown Location" else 10) + colour_art(centre_art(combine_arts([date_art, "\n"*8]), width-1), bcolors.CYAN) + '\n\n'
-        print_part_loca = centre_art(f'{location.strip()}, {lunar_date_str}', width-1) + '\n'
+        print_part_time = combine_arts(['                  \n'* 8, time_art, '   │\n'*8, '\n'*2+weather_now_print]) + '\n\n'
         print_part_weat = combine_arts([' \n'* 20, weather_forcast]) + '\n\n'
-        print_part_time = combine_arts(['                  \n'* 8, time_art, '   │\n'*8, '\n'*2+weather_now_print])
-        print_part_all = print_part_date + print_part_loca + print_part_weat + print_part_time
+        print_part_loca = centre_art(f'{location.strip()}, {lunar_date_str}', width-1)
+        print_part_all = print_part_date + print_part_time + print_part_weat + print_part_loca
         
         os.system('clear')
         print(print_part_all)
