@@ -117,28 +117,33 @@ def remove_dots(art):
 def getWeather():
     # weather = open('/Users/jvshang/Documents/ascii_clock_ipad/example_weather.txt').read()
     weather = os.popen('curl -fGsS --compressed "wttr.in/BS1+1NR?2F"').read()
+    weather_split = weather.splitlines()
+    if len(weather_split) < 27:
+        return None, None, None
     weather_now = weather.splitlines()[2:7]
     weather_now = '\n'.join(weather_now)
     weather_forcast = weather.splitlines()[7:27]
     weather_forcast = '\n'.join(weather_forcast)
     location = weather.splitlines()[27][10:][:-22]
-    if weather_forcast.strip() == '':
-        raise
     return weather_now, weather_forcast, location
 
 def getLunarChineseChars(month, day):
-    chinese_months = ["正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "腊月"]
-    chinese_days = ["初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
-                    "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
-                    "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
-                    ]
+    chinese_months = [
+        "正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "腊月"
+    ]
+    chinese_days = [
+        "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
+        "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
+        "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
+    ]
     return chinese_months[month-1] + chinese_days[day-1]
 
 def main():
-    os.system('clear')
     date_str = None
     dot_printed = False
-    last_weather_update = datetime.datetime.now() - datetime.timedelta(days=1)
+    now = datetime.datetime.now()
+    last_weather_update = now - datetime.timedelta(days=1)
+    weather_now, weather_forcast, location = None, None, None
     while True:
         width, height = os.get_terminal_size()
         if width != 128 or height != 44:
@@ -146,41 +151,32 @@ def main():
             sleep(1)
             os.system('clear') 
             continue
-        if datetime.datetime.now() - last_weather_update > datetime.timedelta(minutes=30):
-            try:
-                weather_now, weather_forcast, location = getWeather()
-                last_weather_update = datetime.datetime.now()
-            except Exception as error:
-                print(error)
-                print('failed to get weather, will retry...')
-        date_str = datetime.datetime.now() .strftime(f"%a  %d{determine_th_st_nd_rd(datetime.datetime.now().day)}  %b") 
+        if now - last_weather_update > datetime.timedelta(minutes=30):
+            weather_now, weather_forcast, location = getWeather()
+            if location is not None:
+                last_weather_update = now
+        date_str = now .strftime(f"%a  %d{determine_th_st_nd_rd(now.day)}  %b") 
         date_art       = text2art(date_str, font='colossal')
         lunar_date = LunarDate.today()
         lunar_date_str = getLunarChineseChars(lunar_date.month, lunar_date.day)
-        time_str = datetime.datetime.now() .strftime("%H : %M")
-        time_art = text2art(time_str,        font='colossal')
-
-        # lunar_date_art = colour_art(remove_trailing_newlines(centre_art(assemble_chinese_date(lunar_date.month, lunar_date.day), width-1), 3), bcolors.YELLOW)
-        # print('\n' + colour_art(combine_arts(['                  \n'* 8, date_art, '   │    \n'*8, lunar_date_art]), bcolors.CYAN) + '\n')
-        
+        hour_str = now .strftime("%H")
+        minute_str = now .strftime("%M")
         if not dot_printed:
             dot_printed = True
+            dot_str = " : "
         else: 
-            time_art = remove_dots(time_art)
             dot_printed = False
-        
+            dot_str = "   "
+        time_art = text2art(f'{hour_str}{dot_str}{minute_str}', font='colossal')
+
         os.system('clear')
         print('\n' + colour_art(centre_art(combine_arts([date_art, "\n"*8]), width-1), bcolors.CYAN) + '\n')
-        try:
+        if location is not None:
             print(centre_art(f'{location.strip()}, {lunar_date_str}', width-1))
             print(combine_arts([' \n'* 20, weather_forcast]) + '\n\n')
-        except Exception as error:
-            print(centre_art(error, width-1))
-            print(centre_art("Failed to get weather data, will retry...", width-1))
-        try: 
-            weather_now_print = f'                Updated {(datetime.datetime.now() - last_weather_update).total_seconds() / 60.0:.0f}min ago\n' + weather_now
+            weather_now_print = f'                Updated {(now - last_weather_update).total_seconds() / 60.0:.0f}min ago\n' + weather_now
             print(combine_arts(['                  \n'* 8, time_art, '   │\n'*8, '\n'*2+weather_now_print]))
-        except:
+        else:
             print(centre_art(time_art, width-1))
         sleep(0.99)
         
