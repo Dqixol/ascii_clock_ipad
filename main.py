@@ -142,9 +142,9 @@ def main():
     date_str = None
     dot_printed = False
     latest_weather = ('\n'*5 + '         Weather data unavailable\n', '', 'Unknown Location')
+    last_weather_update = datetime.datetime.now() - datetime.timedelta(days=30)
     while True:
         now = datetime.datetime.now()
-        last_weather_update = now - datetime.timedelta(days=1)
         width, height = os.get_terminal_size()
         if width != 128 or height != 44:
             print('\n'*int(height / 2 - 1) + f"({width}x{height}) Please resize your terminal to exactly 128*44") 
@@ -170,7 +170,7 @@ def main():
             dot_str = "   "
         time_art = text2art(f'{hour_str}{dot_str}{minute_str}', font='colossal')
         weather_now, weather_forcast, location = latest_weather
-        weather_now_print = f'                Updated {(now - last_weather_update).total_seconds() / 60.0:.0f}min ago\n' + weather_now
+        weather_now_print = f'                Updated {(now - last_weather_update).total_seconds()/60:.0f}min ago\n' + weather_now
         print_part_date = '\n' * (1 if location != "Unknown Location" else 10) + colour_art(centre_art(combine_arts([date_art, "\n"*8]), width-1), bcolors.CYAN) + '\n\n'
         print_part_time = combine_arts(['                  \n'* 8, time_art, '   │\n'*8, '\n'*2+weather_now_print]) + '\n\n'
         print_part_weat = combine_arts([' \n'* 20, weather_forcast]) + '\n\n'
