@@ -115,11 +115,11 @@ def remove_dots(art):
     return art.replace(" d8b ", "     ").replace(" Y8P ", "     ")
 
 def getWeather():
-    # weather = open('/Users/jvshang/Documents/ascii_clock_ipad/example_weather.txt').read()
+    # return None, '', 'Unknown Location'
     weather = os.popen('curl -fGsS --compressed "wttr.in/BS1+1NR?2F"').read()
     weather_split = weather.splitlines()
     if len(weather_split) < 27:
-        return None, None, None
+        return None, '', 'Unknown Location'
     weather_now = weather.splitlines()[2:7]
     weather_now = '\n'.join(weather_now)
     weather_forcast = weather.splitlines()[7:27]
@@ -143,7 +143,7 @@ def main():
     dot_printed = False
     now = datetime.datetime.now()
     last_weather_update = now - datetime.timedelta(days=1)
-    weather_now, weather_forcast, location = None, None, None
+    latest_weather = ('\n'*5 + '         Weather data unavailable\n', '', 'Unknown Location')
     while True:
         width, height = os.get_terminal_size()
         if width != 128 or height != 44:
@@ -153,7 +153,9 @@ def main():
             continue
         if now - last_weather_update > datetime.timedelta(minutes=30):
             weather_now, weather_forcast, location = getWeather()
-            if location is not None:
+            if location != "Unknown Location":
+                weather_now_print = f'                Updated {(now - last_weather_update).total_seconds() / 60.0:.0f}min ago\n' + weather_now
+                latest_weather = (weather_now_print, weather_forcast, location)
                 last_weather_update = now
         date_str = now .strftime(f"%a  %d{determine_th_st_nd_rd(now.day)}  %b") 
         date_art       = text2art(date_str, font='colossal')
@@ -168,16 +170,16 @@ def main():
             dot_printed = False
             dot_str = "   "
         time_art = text2art(f'{hour_str}{dot_str}{minute_str}', font='colossal')
-
+        weather_now_print, weather_forcast, location = latest_weather
+        print_part_date = '\n' * (2 if location != "Unknown Location" else 10) + colour_art(centre_art(combine_arts([date_art, "\n"*8]), width-1), bcolors.CYAN) + '\n\n'
+        print_part_loca = centre_art(f'{location.strip()}, {lunar_date_str}', width-1) + '\n'
+        print_part_weat = combine_arts([' \n'* 20, weather_forcast]) + '\n\n'
+        print_part_time = combine_arts(['                  \n'* 8, time_art, '   │\n'*8, '\n'*2+weather_now_print])
+        print_part_all = print_part_date + print_part_loca + print_part_weat + print_part_time
+        
         os.system('clear')
-        print('\n' + colour_art(centre_art(combine_arts([date_art, "\n"*8]), width-1), bcolors.CYAN) + '\n')
-        if location is not None:
-            print(centre_art(f'{location.strip()}, {lunar_date_str}', width-1))
-            print(combine_arts([' \n'* 20, weather_forcast]) + '\n\n')
-            weather_now_print = f'                Updated {(now - last_weather_update).total_seconds() / 60.0:.0f}min ago\n' + weather_now
-            print(combine_arts(['                  \n'* 8, time_art, '   │\n'*8, '\n'*2+weather_now_print]))
-        else:
-            print(centre_art(time_art, width-1))
+        print(print_part_all)
+
         sleep(0.99)
         
 if __name__ == "__main__":
