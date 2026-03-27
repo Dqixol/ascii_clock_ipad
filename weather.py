@@ -22,7 +22,6 @@ class bcolors:
     BLINK = '\033[5m'
     WHITE = '\033[0m'
 
-
 chinese_month_art = """
   8888888888888
   8           8
@@ -115,9 +114,6 @@ def colour_art(art, color):
         colored_art += f"{color}{bcolors.BOLD}{line.rstrip()}{bcolors.ENDC}\n"
     return colored_art
 
-def remove_dots(art):
-    return art.replace(" d8b ", "     ").replace(" Y8P ", "     ")
-
 def getWeather(postcode):
     # return None, '', 'Unknown Location'
     postcode = postcode.replace(" ", "+")
@@ -134,16 +130,6 @@ def getWeather(postcode):
     gps_coords = weather_split[17].split("[")[1].split("]")[0].split(",")
     gps_coords = [float(coord) for coord in gps_coords]
     return weather_now, weather_forcast, location, gps_coords
-
-def determineBirchPollenColor(pollen_count):
-    if pollen_count > 0 and pollen_count < 3:
-        return bcolors.GREEN
-    if pollen_count >= 3 and pollen_count < 20:
-        return bcolors.YELLOW
-    elif pollen_count >= 20 and pollen_count < 100:
-        return bcolors.RED
-    elif pollen_count >= 100:
-        return bcolors.MAGENTA
 
 def getLunarChineseChars(month, day):
     chinese_months = [
@@ -164,26 +150,31 @@ class weatherInfo:
         self.location = None
         self.gps_coords = None
         self.last_update_time = None
+        self.tz = None
 
     def getDoI(self):
         gps_coords = self.gps_coords
-        details_forcast     = subprocess.getoutput(f'curl -fGsS "https://api.open-meteo.com/v1/forecast?latitude={gps_coords[0]}&longitude={gps_coords[1]}&minutely_15=temperature_2m,apparent_temperature,precipitation,precipitation_probability&forecast_days=2&timezone=auto"')
-        details_air_quality = subprocess.getoutput(f'curl -fGsS "https://air-quality-api.open-meteo.com/v1/air-quality?latitude={gps_coords[0]}&longitude={gps_coords[1]}&hourly=birch_pollen,european_aqi&forecast_days=2&timezone=auto"')
+        while True:
+            try:
+                details_forcast     = subprocess.getoutput(f'curl -fGsS "https://api.open-meteo.com/v1/forecast?latitude={gps_coords[0]}&longitude={gps_coords[1]}&minutely_15=temperature_2m,apparent_temperature,precipitation,precipitation_probability&forecast_days=2&timezone=auto"')
+                details_air_quality = subprocess.getoutput(f'curl -fGsS "https://air-quality-api.open-meteo.com/v1/air-quality?latitude={gps_coords[0]}&longitude={gps_coords[1]}&hourly=birch_pollen,european_aqi&forecast_days=2&timezone=auto"')
+                data_forcast = json.loads(details_forcast)
+                data_air_quality = json.loads(details_air_quality)
+                break
+            except:
+                print("Error fetching weather data, retry...")
 
-        data_forcast = json.loads(details_forcast)
-        data_air_quality = json.loads(details_air_quality)
-
-        tz = pytz.timezone(data_forcast["timezone"])
-        now = datetime.datetime.now(tz=tz)
+        self.tz = pytz.timezone(data_forcast["timezone"])
+        now = datetime.datetime.now(tz=self.tz)
         df_forcast = pd.DataFrame({
-            "time": [tz.localize(datetime.datetime.fromisoformat(t)) for t in data_forcast["minutely_15"]["time"]],
+            "time": [self.tz.localize(datetime.datetime.fromisoformat(t)) for t in data_forcast["minutely_15"]["time"]],
             "temperature_2m": data_forcast["minutely_15"]["temperature_2m"],
             "apparent_temperature": data_forcast["minutely_15"]["apparent_temperature"],
             "precipitation": data_forcast["minutely_15"]["precipitation"],
             "precipitation_probability": data_forcast["minutely_15"]["precipitation_probability"]
         })
         df_air_quality = pd.DataFrame({
-            "time": [tz.localize(datetime.datetime.fromisoformat(t)) for t in data_air_quality["hourly"]["time"]],
+            "time": [self.tz.localize(datetime.datetime.fromisoformat(t)) for t in data_air_quality["hourly"]["time"]],
             "birch_pollen": data_air_quality["hourly"]["birch_pollen"],
             "european_aqi": data_air_quality["hourly"]["european_aqi"]
         })
@@ -198,7 +189,7 @@ class weatherInfo:
     def getArt(self):
         width = 128
         date_str = None
-        now = datetime.datetime.now(tz=datetime.timezone.utc).astimezone()
+        now = datetime.datetime.now(tz=self.tz if self.tz else datetime.timezone.utc)
         if self.weather_now is None or (now - self.last_update_time).total_seconds() > 600:
             self.weather_now, self.weather_forcast, self.location, self.gps_coords = getWeather(self.location_human)
             self.last_update_time = now

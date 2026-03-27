@@ -11,7 +11,26 @@ plt.style.use('dark_background')
 import matplotlib.dates as mdates
 
 app = Flask(__name__)
-conv = Ansi2HTMLConverter(inline=True)
+conv = Ansi2HTMLConverter(inline=True, scheme="dracula")
+
+colour_dict = {
+    'polar_night' : '#2E3440',
+    'polar_dawn'   : '#3B4252',
+    'polar_dusk'    : '#434C5E',
+    'polar_day'   : '#4C566A',
+    'snow_storm' : '#D8DEE9',
+    'snow'       : '#E5E9F0',
+    'snow_melt'  : '#ECEFF4',
+    'frost_green' : '#8FBCBB',
+    'frost_cyan'  : '#88C0D0',
+    'frost_blue'  : '#81A1C1',
+    'frost_dblue' : '#5E81AC',
+    'aurora_red'  : '#BF616A',
+    'aurora_orange' : '#D08770',
+    'aurora_yellow' : '#EBCB8B',
+    'aurora_green' : '#A3BE8C',
+    'aurora_purple' : '#B48EAD',
+}
 
 weather_info = weather.weatherInfo("BS1 1NR")
 
@@ -24,19 +43,19 @@ def make_svg():
         ax.set_xlim(df_forcast["time"].min(), df_forcast["time"].max())
     # ax00:
     for ax in [axs[0,0]]:
-        ax.plot(df_forcast["time"], df_forcast["temperature_2m"], label="Temperature [°C]")
-        ax.plot(df_forcast["time"], df_forcast["apparent_temperature"], label="Feels like [°C]")
+        ax.plot(df_forcast["time"], df_forcast["temperature_2m"], label="Temperature [°C]", color=colour_dict["aurora_orange"])
+        ax.plot(df_forcast["time"], df_forcast["apparent_temperature"], label="Feels like [°C]", color=colour_dict["frost_cyan"])
         min_temp = min(df_forcast["temperature_2m"].min(), df_forcast["apparent_temperature"].min())
         max_temp = max(df_forcast["temperature_2m"].max(), df_forcast["apparent_temperature"].max())
         ax.set_ylim(0 if min_temp > 0 else min_temp - 1, 20 if max_temp < 20 else max_temp + 1)
         ax.legend(**legend_kwargs, ncol=2)
         ax.get_xaxis().set_visible(False)
     for ax in [axs[0,1]]:
-        ax.plot(df_forcast["time"], df_forcast["precipitation_probability"]/100.0, label="Probability")
-        ax.bar(df_forcast["time"], df_forcast["precipitation"]*4.0, width = 0.005, label="Precipitation [mm/h]")
+        ax.bar(df_forcast["time"], df_forcast["precipitation"]*4.0, width = 0.005, label="Precipitation [mm/h]", color=colour_dict["frost_green"])
+        ax.plot(df_forcast["time"], df_forcast["precipitation_probability"]/100.0, label="Probability", color=colour_dict["frost_cyan"])
         ax.legend(**legend_kwargs, ncol=2)
         ax.get_xaxis().set_visible(False)
-        ax.set_ylim(0, 1 if df_forcast["precipitation"].max() < 1 else df_forcast["precipitation"].max() + 0.5)
+        ax.set_ylim(0, 1.3 if df_forcast["precipitation"].max() < 1.3 else df_forcast["precipitation"].max() + 0.5)
     for ax in [axs[1, 0]]:
         ax.plot(df_air_quality["time"], df_air_quality["birch_pollen"], label="Birch Pollen [grains/m³]", alpha=0.0)
         ax.legend(**legend_kwargs)
@@ -45,10 +64,10 @@ def make_svg():
         df_birch_10_20 = df_air_quality.query("birch_pollen >= 10 and birch_pollen < 20")
         df_birch_20_100 = df_air_quality.query("birch_pollen >= 20 and birch_pollen < 100")
         df_birch_100 = df_air_quality.query("birch_pollen >= 100")
-        ax.bar(df_birch_0_10["time"],   df_birch_0_10["birch_pollen"],   color="green",  width = 0.005)
-        ax.bar(df_birch_10_20["time"], df_birch_10_20["birch_pollen"], color="yellow", width = 0.005)
-        ax.bar(df_birch_20_100["time"], df_birch_20_100["birch_pollen"], color="red", width = 0.005)
-        ax.bar(df_birch_100["time"],    df_birch_100["birch_pollen"],    color="purple",    width = 0.005)
+        ax.bar(df_birch_0_10["time"],   df_birch_0_10["birch_pollen"],   color=colour_dict["aurora_green"],  width = 0.005)
+        ax.bar(df_birch_10_20["time"], df_birch_10_20["birch_pollen"], color=colour_dict["aurora_yellow"], width = 0.005)
+        ax.bar(df_birch_20_100["time"], df_birch_20_100["birch_pollen"], color=colour_dict["aurora_red"], width = 0.005)
+        ax.bar(df_birch_100["time"],    df_birch_100["birch_pollen"],    color=colour_dict["aurora_purple"],    width = 0.005)
     for ax in [axs[1, 1]]:
         ax.plot(df_air_quality["time"], df_air_quality["european_aqi"], label="European AQI", alpha=0.0)
         ax.legend(**legend_kwargs)
@@ -57,10 +76,10 @@ def make_svg():
         df_aqi_50_100 = df_air_quality.query("european_aqi >= 50 and european_aqi < 100")
         df_aqi_100_150 = df_air_quality.query("european_aqi >= 100 and european_aqi < 150")
         df_aqi_150 = df_air_quality.query("european_aqi >= 150")
-        ax.bar(df_aqi_0_50["time"],   df_aqi_0_50["european_aqi"],   color="cyan",  width = 0.005)
-        ax.bar(df_aqi_50_100["time"], df_aqi_50_100["european_aqi"], color="green", width = 0.005)
-        ax.bar(df_aqi_100_150["time"], df_aqi_100_150["european_aqi"], color="yellow", width = 0.005)
-        ax.bar(df_aqi_150["time"],    df_aqi_150["european_aqi"],    color="red",    width = 0.005)
+        ax.bar(df_aqi_0_50["time"],   df_aqi_0_50["european_aqi"],   color=colour_dict["frost_cyan"],  width = 0.005)
+        ax.bar(df_aqi_50_100["time"], df_aqi_50_100["european_aqi"], color=colour_dict["aurora_green"], width = 0.005)
+        ax.bar(df_aqi_100_150["time"], df_aqi_100_150["european_aqi"], color=colour_dict["aurora_yellow"], width = 0.005)
+        ax.bar(df_aqi_150["time"],    df_aqi_150["european_aqi"],    color=colour_dict["aurora_red"],    width = 0.005)
 
     fig.tight_layout()
     buf = StringIO()
@@ -85,4 +104,4 @@ def plot_svg():
     return Response(svg, mimetype="image/svg+xml")
 
 if __name__ == "__main__":
-    app.run(debug=True, port=3000)
+    app.run(debug=False, port=3000)

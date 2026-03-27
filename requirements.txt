@@ -2,3 +2,4 @@ flask
 ansi2html
 pandas
 matplotlib
+gunicorn
