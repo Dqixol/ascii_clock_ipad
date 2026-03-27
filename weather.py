@@ -21,6 +21,7 @@ class bcolors:
     UNDERLINE = '\033[4m'
     BLINK = '\033[5m'
     WHITE = '\033[0m'
+    NOCOLOR = ''
 
 chinese_month_art = """
   8888888888888
@@ -111,7 +112,7 @@ def centre_art(art, width):
 def colour_art(art, color):
     colored_art = ''
     for line in art.splitlines():
-        colored_art += f"{color}{bcolors.BOLD}{line.rstrip()}{bcolors.ENDC}\n"
+        colored_art += f"{color}{bcolors.BOLD}{line}{bcolors.ENDC}\n"
     return colored_art
 
 def getWeather(postcode):
@@ -200,7 +201,7 @@ class weatherInfo:
         hour_str = now.strftime("%H")
         minute_str = now.strftime("%M")
         dot_str = " : " if now.second % 2 == 0 else "   "
-        time_art = text2art(f'{hour_str}{dot_str}{minute_str}', font='colossal')
+        time_art = colour_art(text2art(f'{hour_str}{dot_str}{minute_str}', font='colossal'), bcolors.NOCOLOR)
 
         weather_now_print = f'                Updated {(now - self.last_update_time).total_seconds()/60:.0f}min ago\n' + self.weather_now
         print_part_date = '\n' * (1 if self.location != "Unknown Location" else 10) + colour_art(centre_art(combine_arts([date_art, "\n"*8]), width-1), bcolors.CYAN) + '\n\n'
