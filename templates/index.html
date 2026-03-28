@@ -2,6 +2,9 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <link href="https://iosevka-webfonts.github.io/iosevka-term/iosevka-term.css" rel="stylesheet" />
   <style>
     body {
@@ -9,8 +12,11 @@
       background: #3B4252;
       color: #E5E9F0;
       height: 100vh;
-      display: grid;
+      display: flex;
       place-items: center;
+      -webkit-user-select: none;
+      user-select: none;
+      overflow: hidden;
     }
     .wrap {
       display: flex;
@@ -20,7 +26,7 @@
     }
     pre {
       font-family: "Iosevka Term Web", monospace;
-      font-size: 18px;
+      font-size: 15px;
       line-height: 1;
       white-space: pre;
       margin: 0;
@@ -53,7 +59,7 @@
     updateArt();
     updatePlot();
 
-    setInterval(updateArt, 990);    // Update art every second
+    setInterval(updateArt, 1000);    // Update art every second
     setInterval(updatePlot, 900000); // Update plot every 15 minutes
   </script>
 </body>

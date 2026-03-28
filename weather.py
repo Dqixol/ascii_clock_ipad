@@ -1,5 +1,4 @@
 from art import text2art
-from time import sleep
 import datetime
 import subprocess
 from lunardate import LunarDate
@@ -162,8 +161,11 @@ class weatherInfo:
                 data_forcast = json.loads(details_forcast)
                 data_air_quality = json.loads(details_air_quality)
                 break
-            except:
-                print("Error fetching weather data, retry...")
+            except Exception as e:
+                print("Error fetching weather data, retry in 10 seconds...")
+                print(e)
+                import time
+                time.sleep(10)
 
         self.tz = pytz.timezone(data_forcast["timezone"])
         now = datetime.datetime.now(tz=self.tz)
@@ -179,8 +181,11 @@ class weatherInfo:
             "birch_pollen": data_air_quality["hourly"]["birch_pollen"],
             "european_aqi": data_air_quality["hourly"]["european_aqi"]
         })
-        # interpolate air quality data to 1min intervals
-        df_air_quality = df_air_quality.set_index("time").resample(datetime.timedelta(minutes=1)).interpolate().reset_index()
+        # interpolate air quality data to 1min intervals, sometimes it can fail due to e.g. BST / GNT time change...
+        try:
+            df_air_quality = df_air_quality.set_index("time").resample(datetime.timedelta(minutes=1)).interpolate().reset_index()
+        except:
+            pass
         df_forcast = df_forcast[df_forcast["time"] >= now - datetime.timedelta(minutes=20)]
         df_forcast = df_forcast[df_forcast["time"] < now + datetime.timedelta(days=1)]
         df_air_quality = df_air_quality[df_air_quality["time"] >= now - datetime.timedelta(minutes=1)]
