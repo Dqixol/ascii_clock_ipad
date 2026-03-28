@@ -5,9 +5,8 @@
   "description": "ASCII + SVG dashboard",
   "startup": "services",
   "boot": "auto",
-  "ports": {
-    "3000/tcp": 3000
-  },
+  "ingress": true,
+  "ingress_port": 3000,
   "host_network": true,
   "webui": "http://[HOST]:[PORT:3000]",
   "arch": ["armv7", "aarch64", "amd64"]
