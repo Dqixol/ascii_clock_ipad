@@ -201,8 +201,13 @@ class weatherInfo:
         date_str = None
         now = datetime.datetime.now(tz=self.tz if self.tz else datetime.timezone.utc)
         if self.weather_now is None or (now - self.last_update_time).total_seconds() > 600:
-            self.weather_now, self.weather_forcast, self.location, self.gps_coords = getWeather(self.location_human)
-            self.last_update_time = now
+            tmp = getWeather(self.location_human)
+            if tmp[0] is not None:
+                self.weather_now = tmp[0]
+                self.weather_forcast = tmp[1]
+                self.location = tmp[2]
+                self.gps_coords = tmp[3]
+                self.last_update_time = now
         date_str = now .strftime(f"%a  %d{determine_th_st_nd_rd(now.day)}  %b") 
         date_art       = text2art(date_str, font='colossal')
         lunar_date = LunarDate.today()
