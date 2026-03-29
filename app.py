@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, send_file
 import weather
 
 from io import StringIO
@@ -120,7 +120,7 @@ def currentCondText2():
 @app.route("/currentCondImage")
 def currentCondImage():
     current_cond = weather_info.getCurrentCondArt()
-    return Response(open(current_cond[2], "rb").read(), mimetype="image/png")
+    return send_file(current_cond[2], mimetype="image/png")
 
 @app.route("/plot.svg")
 def plot_svg():

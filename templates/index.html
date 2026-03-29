@@ -101,7 +101,7 @@
         </div>
           <div class="time-cond">
             <pre id="timeText"></pre>
-            <img id="currentCondImg" alt="current condition">
+            <img id="currentCondImg" src="/currentCondImage" alt="current condition">
             <pre id="currentCondText1"></pre>
             <pre id="currentCondText2"></pre>
         </div>
@@ -142,11 +142,8 @@
       document.getElementById("currentCondText2").textContent = text;
     }
 
-    async function updateCurrentCondImage() {
-      const res = await fetch("/currentCondImage");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      document.getElementById("currentCondImg").src = url;
+    function updateCurrentCondImage() {
+        document.getElementById("currentCondImg").src = "/currentCondImage?t=" + Date.now();
     }
     
     function updatePlot() {
