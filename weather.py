@@ -10,47 +10,12 @@ from timezonefinder import TimezoneFinder
 
 from forcast_doi import hourly_doi, air_quality_doi, hourly_url, air_quality_url, current_url, current_doi
 wmo_codes = json.load(open("wmo.json", "r"))
-class bcolors:
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    MAGENTA = '\033[95m'
-    CYAN = '\033[96m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    BLINK = '\033[5m'
-    WHITE = '\033[0m'
-    NOCOLOR = ''
-
-def combine_arts(arts):
-    art_lines = zip(*[art.splitlines() for art in arts])
-    combined_art = "\n".join(" ".join(line) for line in art_lines) 
-    return combined_art
 
 def determine_th_st_nd_rd(day):
     if 4 <= day <= 20 or 24 <= day <= 30:
         return "th" 
     else: 
         return ["st", "nd", "rd"][day % 10 - 1]
-
-def remove_trailing_newlines(art, num_newlines=2):
-    art = art.rstrip()
-    art = art + " "* 5
-    art = art + "\n"*num_newlines
-    return art
-
-def centre_art(art, width):
-    art_lines = art.splitlines() 
-    centred_lines = [line.center(width) for line in art_lines] 
-    return "\n".join(centred_lines)
-
-def colour_art(art, color):
-    colored_art = ''
-    for line in art.splitlines():
-        colored_art += f"{color}{bcolors.BOLD}{line}{bcolors.ENDC}\n"
-    return colored_art
 
 def getLunarChineseChars(month, day):
     chinese_months = [
@@ -62,7 +27,6 @@ def getLunarChineseChars(month, day):
         "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
     ]
     return chinese_months[month-1] + chinese_days[day-1]
-
 class weatherInfo:
     def __init__(self, location_human):
         self.location_human = location_human
@@ -166,9 +130,18 @@ class weatherInfo:
         now = datetime.datetime.now(tz=self.pytz)
         if self.weather_now is None or (now - self.last_update_time).total_seconds() > 20*60:
             self.getCurrentCondition()
-        return f'Updated {(now - self.last_update_time).total_seconds()/60:.0f} mins ago \n' + \
-               f'{self.weather_now["wmo_description"]}\n' + \
-               f'{self.weather_now["temperature_2m"]}, Feels like {self.weather_now["apparent_temperature"]}\n' + \
-               f'Humidity: {self.weather_now["relative_humidity_2m"]}\n' + \
-               f'Cloud cover: {self.weather_now["cloud_cover"]}\n' + \
-               f'Wind: {self.weather_now["wind_speed_10m"]} (gusts: {self.weather_now["wind_gusts_10m"]})', self.weather_now["wmo_image_path"]
+        return  f'|               \n' +\
+                f'|               \n' +\
+                f'|  Temperature: \n' +\
+                f'|  Humidity:    \n' +\
+                f'|  Cloud cover: \n' +\
+                f'|  Wind:        \n', \
+                \
+                f'Updated {(now - self.last_update_time).total_seconds()/60:.0f} mins ago\n' + \
+                f'{self.weather_now["wmo_description"]}\n' + \
+                f'{self.weather_now["temperature_2m"]}; feels like {self.weather_now["apparent_temperature"]}\n' + \
+                f'{self.weather_now["relative_humidity_2m"]}\n' + \
+                f'{self.weather_now["cloud_cover"]}\n' + \
+                f'{self.weather_now["wind_speed_10m"]}; gusts {self.weather_now["wind_gusts_10m"]}', \
+                \
+                self.weather_now["wmo_image_path"]

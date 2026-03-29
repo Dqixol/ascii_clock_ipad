@@ -5,7 +5,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <link href="https://iosevka-webfonts.github.io/iosevka-term/iosevka-term.css" rel="stylesheet" />
+    <link href="https://iosevka-webfonts.github.io/iosevka-slab/iosevka-slab.css" rel="stylesheet" />
     <style>
         body {
             margin: 0;
@@ -21,7 +21,7 @@
 
         pre {
             margin: 0;
-            font-family: 'Iosevka Term', monospace;
+            font-family: 'Iosevka Slab Web', monospace;
         }
         .wrap {
             display: flex;
@@ -31,13 +31,17 @@
         }
 
         .title-block {
-            font-size: 18px;
+            font-size: 16px;
             text-align: center;
         }
 
         .date-block {
-            font-size: 100px;
+            font-size: 120px;
             text-align: center;
+        }
+
+        #dateText {
+            color: #81A1C1;
         }
 
         .time-cond {
@@ -48,7 +52,7 @@
         }
 
         #timeText {
-            font-size: 100px;
+            font-size: 120px;
             line-height: 1;
             margin: 0;
             padding: 0;
@@ -58,18 +62,32 @@
         #currentCondImg {
             width: 80px;
             height: auto;
+            margin-left: 3%;
+            margin-right: 3%;
             flex: 0 0 auto;
         }
 
-        #currentCondText {
-            font-size: 18px;
+        #currentCondText1 {
+            font-size: 16px;
             margin: 0;
             padding: 0;
         }
+        #currentCondText2 {
+            font-size: 16px;
+            margin: 0;
+            padding: 0;
+            text-align: right;
+        }
 
         .plot-block {
+            margin-top: 10px;
             display: flex;
             justify-content: center;
+        }
+
+        #plots {
+            width: 90%;
+            height: auto;
         }
     </style>
 </head>
@@ -84,7 +102,8 @@
           <div class="time-cond">
             <pre id="timeText"></pre>
             <img id="currentCondImg" alt="current condition">
-            <pre id="currentCondText"></pre>
+            <pre id="currentCondText1"></pre>
+            <pre id="currentCondText2"></pre>
         </div>
 
         <div class="plot-block">
@@ -111,10 +130,16 @@
       document.getElementById("timeText").textContent = text;
     }
 
-    async function updateCurrentCond() {
-      const res = await fetch("/currentCondText");
+    async function updateCurrentCondTitle() {
+      const res = await fetch("/currentCondText1");
       const text = await res.text();
-      document.getElementById("currentCondText").textContent = text;
+      document.getElementById("currentCondText1").textContent = text;
+    }
+
+    async function updateCurrentCondValue() {
+      const res = await fetch("/currentCondText2");
+      const text = await res.text();
+      document.getElementById("currentCondText2").textContent = text;
     }
 
     async function updateCurrentCondImage() {
@@ -131,14 +156,16 @@
     updateTitle();
     updateDate();
     updateTime();
-    updateCurrentCond();
+    updateCurrentCondTitle();
+    updateCurrentCondValue();
     updateCurrentCondImage();
     updatePlot();
 
     setInterval(updateTitle, 120000);    // Update title every 20 minutes
     setInterval(updateDate, 600000);   // Update date every 10 minutes (to catch day change)
     setInterval(updateTime, 1000);     // Update time every second
-    setInterval(updateCurrentCond, 300000); // Update current condition 5 minutes
+    setInterval(updateCurrentCondTitle, 300000); // Update current condition title 5 minutes
+    setInterval(updateCurrentCondValue, 300000); // Update current condition value 5 minutes
     setInterval(updateCurrentCondImage, 300000); // Update current condition image every 5 min
     setInterval(updatePlot, 1800000); // Update plot every 30 minutes
   </script>

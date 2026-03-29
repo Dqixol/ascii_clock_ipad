@@ -1,5 +1,4 @@
 from flask import Flask, render_template, Response
-from ansi2html import Ansi2HTMLConverter
 import weather
 
 from io import StringIO
@@ -10,7 +9,6 @@ plt.style.use('dark_background')
 import matplotlib.dates as mdates
 
 app = Flask(__name__)
-conv = Ansi2HTMLConverter(inline=True, scheme="dracula")
 
 colour_dict = {
     'polar_night' : '#2E3440',
@@ -108,15 +106,21 @@ def timeText():
     time = weather_info.getTimeArt()
     return time
 
-@app.route("/currentCondText")
-def currentCondText():
+@app.route("/currentCondText1")
+def currentCondText1():
     current_cond = weather_info.getCurrentCondArt()
     return current_cond[0]
+
+@app.route("/currentCondText2")
+def currentCondText2():
+    current_cond = weather_info.getCurrentCondArt()
+    return current_cond[1]
+
 
 @app.route("/currentCondImage")
 def currentCondImage():
     current_cond = weather_info.getCurrentCondArt()
-    return Response(open(current_cond[1], "rb").read(), mimetype="image/png")
+    return Response(open(current_cond[2], "rb").read(), mimetype="image/png")
 
 @app.route("/plot.svg")
 def plot_svg():
