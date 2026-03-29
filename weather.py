@@ -122,7 +122,9 @@ class weatherInfo:
         now = datetime.datetime.now(tz=self.pytz)
         if self.df_forcast is None or (datetime.datetime.now(tz=self.pytz) - self.forcast_last_update_time).total_seconds() > 30*60:
             self.getDoI()
-        df_future_cond = self.df_forcast.groupby("weather_code").first().reset_index().sort_values("time")[["time", "weather_code"]]
+        df_future_cond = self.df_forcast[["time", "weather_code"]]
+        df_future_cond['code_diff'] = df_future_cond['weather_code'].diff().fillna(0).astype(int)
+        df_future_cond = df_future_cond[df_future_cond["code_diff"] != 0]
         df_future_cond = df_future_cond[df_future_cond["time"] > now]
         df_future_cond['time'] = df_future_cond['time'].dt.strftime('%H')
         df_future_cond['is_day'] = df_future_cond['time'].astype(int).apply(lambda x: 1 if 7 <= x and x <= 18 else 0)
