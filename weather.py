@@ -30,7 +30,12 @@ def getLunarChineseChars(month, day):
 class weatherInfo:
     def __init__(self, location_human):
         self.location_human = location_human
-        self.location, self.gps_coords = geopy.geocoders.Nominatim(user_agent="myGeocoder").geocode(location_human)
+        try:
+            self.getLocation()
+        except Exception as e:
+            print("Error fetching location data:")
+            print(e)
+            raise
         if self.location is None:
             raise ValueError(f"Could not geocode location: {location_human}")
         if len(self.location.split(",")) > 3:
@@ -45,6 +50,9 @@ class weatherInfo:
         self.df_air_quality = None
         self.getCurrentCondition()
         self.getDoI()
+
+    def getLocation(self):
+        self.location, self.gps_coords = geopy.geocoders.Nominatim(user_agent="myGeocoder_ascii_clock").geocode(self.location_human)
     
     def getCurrentCondition(self):
         try: 
