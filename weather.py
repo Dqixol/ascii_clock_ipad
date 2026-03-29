@@ -154,6 +154,9 @@ class weatherInfo:
 
     def getDoI(self):
         gps_coords = self.gps_coords
+        if gps_coords is None:
+            _, _, _, gps_coords = getWeather(self.location_human)
+            self.gps_coords = gps_coords
         while True:
             try:
                 details_forcast     = subprocess.getoutput(f'curl -fGsS "https://api.open-meteo.com/v1/forecast?latitude={gps_coords[0]}&longitude={gps_coords[1]}&minutely_15=temperature_2m,apparent_temperature,precipitation,precipitation_probability&forecast_days=2&timezone=auto"')
@@ -164,6 +167,7 @@ class weatherInfo:
             except Exception as e:
                 print("Error fetching weather data, retry in 10 seconds...")
                 print(e)
+                print(self.gps_coords)
                 import time
                 time.sleep(10)
 
@@ -182,14 +186,14 @@ class weatherInfo:
             "european_aqi": data_air_quality["hourly"]["european_aqi"]
         })
         # interpolate air quality data to 1min intervals, sometimes it can fail due to e.g. BST / GNT time change...
+        df_forcast = df_forcast[df_forcast["time"] >= now - datetime.timedelta(minutes=20)]
+        df_forcast = df_forcast[df_forcast["time"] < now + datetime.timedelta(days=1, minutes=15)]
+        df_air_quality = df_air_quality[df_air_quality["time"] >= now - datetime.timedelta(minutes=60)]
+        df_air_quality = df_air_quality[df_air_quality["time"] < now + datetime.timedelta(days=1, hours=1)]
         try:
-            df_air_quality = df_air_quality.set_index("time").resample(datetime.timedelta(minutes=1)).interpolate().reset_index()
+            df_air_quality = df_air_quality.set_index("time").drop_duplicates().resample(datetime.timedelta(minutes=1)).interpolate().reset_index()
         except:
             pass
-        df_forcast = df_forcast[df_forcast["time"] >= now - datetime.timedelta(minutes=20)]
-        df_forcast = df_forcast[df_forcast["time"] < now + datetime.timedelta(days=1)]
-        df_air_quality = df_air_quality[df_air_quality["time"] >= now - datetime.timedelta(minutes=1)]
-        df_air_quality = df_air_quality[df_air_quality["time"] < now + datetime.timedelta(days=1)]
         return df_forcast, df_air_quality
 
     def getArt(self):
