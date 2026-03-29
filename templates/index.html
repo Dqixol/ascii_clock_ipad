@@ -1,66 +1,146 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <link href="https://iosevka-webfonts.github.io/iosevka-term/iosevka-term.css" rel="stylesheet" />
-  <style>
-    body {
-      margin: 0;
-      background: #3B4252;
-      color: #E5E9F0;
-      height: 100vh;
-      display: flex;
-      place-items: center;
-      -webkit-user-select: none;
-      user-select: none;
-      overflow: hidden;
-    }
-    .wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 24px;
-    }
-    pre {
-      font-family: "Iosevka Term Web", monospace;
-      font-size: 15px;
-      line-height: 1;
-      white-space: pre;
-      margin: 0;
-      transform: translateX(30px);
-    }
-    img {
-    width: 100%;
-    height: auto;
-    max-width: none; /* remove previous limit */
-    }
-  </style>
+    <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link href="https://iosevka-webfonts.github.io/iosevka-term/iosevka-term.css" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            background: #3B4252;
+            color: #E5E9F0;
+            height: 100vh;
+            display: flex;
+            place-items: center;
+            -webkit-user-select: none;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        pre {
+            margin: 0;
+            font-family: 'Iosevka Term', monospace;
+        }
+        .wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .title-block {
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .date-block {
+            font-size: 100px;
+            text-align: center;
+        }
+
+        .time-cond {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        #timeText {
+            font-size: 100px;
+            line-height: 1;
+            margin: 0;
+            padding: 0;
+            white-space: nowrap;
+        }
+
+        #currentCondImg {
+            width: 80px;
+            height: auto;
+            flex: 0 0 auto;
+        }
+
+        #currentCondText {
+            font-size: 18px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .plot-block {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <pre id="art"></pre>
-    <img id="plot" alt="plot">
-  </div>
+    <div class="wrap">
+        <div class="title-block">
+            <pre id="titleText"></pre>
+        </div>
+        <div class="date-block">
+            <pre id="dateText"></pre>
+        </div>
+          <div class="time-cond">
+            <pre id="timeText"></pre>
+            <img id="currentCondImg" alt="current condition">
+            <pre id="currentCondText"></pre>
+        </div>
+
+        <div class="plot-block">
+            <img id="plots" alt="plots">
+        </div>
+    </div>
 
   <script>
-    async function updateArt() {
-      const res = await fetch("/art");
-      const html = await res.text();
-      document.getElementById("art").innerHTML = html;
+    async function updateTitle() {
+      const res = await fetch("/titleText");
+      const text = await res.text();
+      document.getElementById("titleText").textContent = text;
     }
 
+    async function updateDate() {
+      const res = await fetch("/dateText");
+      const text = await res.text();
+      document.getElementById("dateText").textContent = text;
+    }
+
+    async function updateTime() {
+      const res = await fetch("/timeText");
+      const text = await res.text();
+      document.getElementById("timeText").textContent = text;
+    }
+
+    async function updateCurrentCond() {
+      const res = await fetch("/currentCondText");
+      const text = await res.text();
+      document.getElementById("currentCondText").textContent = text;
+    }
+
+    async function updateCurrentCondImage() {
+      const res = await fetch("/currentCondImage");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      document.getElementById("currentCondImg").src = url;
+    }
+    
     function updatePlot() {
-      document.getElementById("plot").src = "/plot.svg?t=" + Date.now();
+      document.getElementById("plots").src = "/plot.svg?t=" + Date.now();
     }
 
-    updateArt();
+    updateTitle();
+    updateDate();
+    updateTime();
+    updateCurrentCond();
+    updateCurrentCondImage();
     updatePlot();
 
-    setInterval(updateArt, 1000);    // Update art every second
-    setInterval(updatePlot, 900000); // Update plot every 15 minutes
+    setInterval(updateTitle, 120000);    // Update title every 20 minutes
+    setInterval(updateDate, 600000);   // Update date every 10 minutes (to catch day change)
+    setInterval(updateTime, 1000);     // Update time every second
+    setInterval(updateCurrentCond, 300000); // Update current condition 5 minutes
+    setInterval(updateCurrentCondImage, 300000); // Update current condition image every 5 min
+    setInterval(updatePlot, 1800000); // Update plot every 30 minutes
   </script>
 </body>
 </html>

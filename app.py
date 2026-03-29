@@ -1,7 +1,6 @@
 from flask import Flask, render_template, Response
 from ansi2html import Ansi2HTMLConverter
 import weather
-import datetime
 
 from io import StringIO
 import matplotlib
@@ -36,7 +35,9 @@ weather_info = weather.weatherInfo("BS1 1NR")
 
 def make_svg():
     legend_kwargs = {"loc": "upper right", "frameon" : False, "fontsize": 12}
-    df_forcast, df_air_quality = weather_info.getDoI()
+    weather_info.getDoI()
+    df_forcast = weather_info.df_forcast
+    df_air_quality = weather_info.df_air_quality
     fig, axs = plt.subplots(2, 2, figsize=(12, 3.5))
     for ax in axs.flat:
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%Hh'))
@@ -92,11 +93,30 @@ def make_svg():
 def index():
     return render_template("index.html")
 
-@app.route("/art")
-def art():
-    ascii_art = weather_info.getArt()
-    html_art = conv.convert(ascii_art, full=False)
-    return html_art
+@app.route("/titleText")
+def titleText():
+    title = weather_info.getTitleArt()
+    return title
+
+@app.route("/dateText")
+def dateText():
+    date = weather_info.getDateArt()
+    return date
+
+@app.route("/timeText")
+def timeText():
+    time = weather_info.getTimeArt()
+    return time
+
+@app.route("/currentCondText")
+def currentCondText():
+    current_cond = weather_info.getCurrentCondArt()
+    return current_cond[0]
+
+@app.route("/currentCondImage")
+def currentCondImage():
+    current_cond = weather_info.getCurrentCondArt()
+    return Response(open(current_cond[1], "rb").read(), mimetype="image/png")
 
 @app.route("/plot.svg")
 def plot_svg():

@@ -1,0 +1,3 @@
+[submodule "static/google-weather-icons"]
+	path = static/google-weather-icons
+	url = https://github.com/mrdarrengriffin/google-weather-icons.git

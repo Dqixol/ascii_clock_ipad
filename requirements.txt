@@ -5,3 +5,5 @@ matplotlib
 lunardate
 art
 pytz
+geopy
+timezonefinder

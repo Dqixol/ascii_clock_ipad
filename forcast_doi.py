@@ -1,0 +1,70 @@
+
+hourly_url = 'https://api.open-meteo.com/v1/forecast'
+hourly_doi = [
+    'dew_point_2m',
+    'apparent_temperature',
+    'precipitation_probability',
+    'precipitation',
+    'rain',
+    'weather_code',
+    'pressure_msl',
+    'surface_pressure',
+    'cloud_cover',
+    'cloud_cover_low',
+    'cloud_cover_mid',
+    'cloud_cover_high',
+    'visibility',
+    'evapotranspiration',
+    'et0_fao_evapotranspiration',
+    'vapour_pressure_deficit',
+    'wind_speed_10m',
+    'wind_gusts_10m',
+    'showers',
+    'snowfall',
+    'snow_depth',
+    'relative_humidity_2m',
+    'temperature_2m',
+]
+
+air_quality_url = 'https://air-quality-api.open-meteo.com/v1/air-quality'
+air_quality_doi = [
+    'pm10',
+    'pm2_5',
+    'carbon_monoxide',
+    'carbon_dioxide',
+    'nitrogen_dioxide',
+    'sulphur_dioxide',
+    'ozone',
+    'aerosol_optical_depth',
+    'dust',
+    'uv_index',
+    'uv_index_clear_sky',
+    'ammonia',
+    'methane',
+    'alder_pollen',
+    'birch_pollen',
+    'grass_pollen',
+    'mugwort_pollen',
+    'olive_pollen',
+    'ragweed_pollen',
+    'european_aqi',
+]
+
+current_url = 'https://api.open-meteo.com/v1/forecast'
+current_doi = [
+    'temperature_2m',
+    'relative_humidity_2m',
+    'apparent_temperature',
+    'is_day',
+    'precipitation',
+    'rain',
+    'snowfall',
+    'showers',
+    'weather_code',
+    'cloud_cover',
+    'pressure_msl',
+    'surface_pressure',
+    'wind_speed_10m',
+    'wind_direction_10m',
+    'wind_gusts_10m'
+]
