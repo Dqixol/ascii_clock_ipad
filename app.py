@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response, send_file
+from flask import Flask, render_template, Response, send_file, jsonify
 import weather
 
 from io import StringIO
@@ -127,5 +127,10 @@ def plot_svg():
     svg = make_svg()
     return Response(svg, mimetype="image/svg+xml")
 
+@app.route("/forecastCond24h")
+def forecastCond24h():
+    json_from_df = weather_info.getFutureCondition()  # list of dicts
+    return jsonify(json_from_df)
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3000, debug=False)
+    app.run(host="0.0.0.0", port=3000, debug=True)

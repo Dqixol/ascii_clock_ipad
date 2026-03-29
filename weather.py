@@ -37,7 +37,8 @@ class weatherInfo:
             self.location = ",".join(self.location.split(",")[:3])
         self.weather_now = None
         self.weather_forcast = None
-        self.last_update_time = None
+        self.cond_last_update_time = None
+        self.forcast_last_update_time = None
         self.tz = TimezoneFinder().timezone_at(lng=self.gps_coords[1], lat=self.gps_coords[0])
         self.pytz = pytz.timezone(self.tz) if self.tz else None
         self.df_forcast = None
@@ -76,7 +77,7 @@ class weatherInfo:
             "wmo_image_path": image_path,
         }
         self.weather_now = condition_to_print
-        self.last_update_time = datetime.datetime.now(tz=self.pytz)
+        self.cond_last_update_time = datetime.datetime.now(tz=self.pytz)
 
     def getDoI(self):
         while True:
@@ -105,8 +106,22 @@ class weatherInfo:
             df_air_quality = df_air_quality.set_index("time").drop_duplicates().resample(datetime.timedelta(minutes=1)).interpolate().reset_index()
         except:
             pass
+        self.forcast_last_update_time = datetime.datetime.now(tz=self.pytz)
         self.df_forcast = df_forcast
         self.df_air_quality = df_air_quality
+
+    def getFutureCondition(self):
+        now = datetime.datetime.now(tz=self.pytz)
+        if self.df_forcast is None or (datetime.datetime.now(tz=self.pytz) - self.forcast_last_update_time).total_seconds() > 30*60:
+            self.getDoI()
+        df_future_cond = self.df_forcast.groupby("weather_code").first().reset_index().sort_values("time")[["time", "weather_code"]]
+        df_future_cond = df_future_cond[df_future_cond["time"] > now]
+        df_future_cond['time'] = df_future_cond['time'].dt.strftime('%H')
+        df_future_cond['is_day'] = df_future_cond['time'].astype(int).apply(lambda x: 1 if 7 <= x and x <= 18 else 0)
+        df_future_cond["wmo_description"] = df_future_cond[["weather_code", "is_day"]].apply(lambda row: wmo_codes.get(str(row["weather_code"]), {}).get('day' if row["is_day"] else "night", {}).get("description", f"Unknown code {row['weather_code']}"), axis=1)
+        df_future_cond["wmo_image_path"]  = df_future_cond[["weather_code", "is_day"]].apply(lambda row: f'static/google-weather-icons/sets/set-2/{wmo_codes.get(str(row["weather_code"]), {}).get(("day" if row["is_day"] else "night"), {}).get("image", "tornado")}.png', axis=1)
+        df_future_cond = df_future_cond[["time", "weather_code", "wmo_description", "wmo_image_path"]]
+        return df_future_cond.to_dict(orient="records")
 
     def getDateArt(self):
         now = datetime.datetime.now(tz=self.pytz)
@@ -128,7 +143,7 @@ class weatherInfo:
 
     def getCurrentCondArt(self):
         now = datetime.datetime.now(tz=self.pytz)
-        if self.weather_now is None or (now - self.last_update_time).total_seconds() > 20*60:
+        if self.weather_now is None or (now - self.cond_last_update_time).total_seconds() > 20*60:
             self.getCurrentCondition()
         return  f'|               \n' +\
                 f'|               \n' +\
@@ -137,7 +152,7 @@ class weatherInfo:
                 f'|  Cloud cover: \n' +\
                 f'|  Wind:        \n', \
                 \
-                f'Updated {(now - self.last_update_time).total_seconds()/60:.0f} mins ago\n' + \
+                f'Updated {(now - self.cond_last_update_time).total_seconds()/60:.0f} mins ago\n' + \
                 f'{self.weather_now["wmo_description"]}\n' + \
                 f'{self.weather_now["temperature_2m"]}; feels like {self.weather_now["apparent_temperature"]}\n' + \
                 f'{self.weather_now["relative_humidity_2m"]}\n' + \

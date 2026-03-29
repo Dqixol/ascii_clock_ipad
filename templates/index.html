@@ -11,7 +11,10 @@
             margin: 0;
             background: #3B4252;
             color: #E5E9F0;
-            height: 100vh;
+            display: flex;
+            justify-content: center;   /* keep horizontal centering */
+            align-items: flex-start;   /* move everything to top */
+            padding-top: 20px;         /* small breathing room */
             display: flex;
             place-items: center;
             -webkit-user-select: none;
@@ -36,6 +39,7 @@
         }
 
         .date-block {
+            margin-top: -20px; /* Move date block up to reduce gap with title */
             font-size: 120px;
             text-align: center;
         }
@@ -79,8 +83,26 @@
             text-align: right;
         }
 
+        .forecastCond24h {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            align-items: center;
+        }
+
+        .forecast-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+        }
+
+        .forecast-item img {
+            width: 40px;
+            height: auto;
+        }
+
         .plot-block {
-            margin-top: 10px;
             display: flex;
             justify-content: center;
         }
@@ -105,7 +127,7 @@
             <pre id="currentCondText1"></pre>
             <pre id="currentCondText2"></pre>
         </div>
-
+        <div id="forecastCond24h" class="forecastCond24h"></div>
         <div class="plot-block">
             <img id="plots" alt="plots">
         </div>
@@ -150,12 +172,37 @@
       document.getElementById("plots").src = "/plot.svg?t=" + Date.now();
     }
 
+    async function updateForecastCond24h() {
+        const res = await fetch("/forecastCond24h");
+        const items = await res.json();
+
+        const container = document.getElementById("forecastCond24h");
+        container.innerHTML = "";
+
+        items.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "forecast-item";
+
+            const time = document.createElement("pre");
+            time.textContent = item.time + "h";
+
+            const img = document.createElement("img");
+            img.src = item.wmo_image_path;
+            img.alt = item.time + " " + item.wmo_description;
+
+            div.appendChild(img);
+            div.appendChild(time);
+            container.appendChild(div);
+        });
+    }
+
     updateTitle();
     updateDate();
     updateTime();
     updateCurrentCondTitle();
     updateCurrentCondValue();
     updateCurrentCondImage();
+    updateForecastCond24h();
     updatePlot();
 
     setInterval(updateTitle, 120000);    // Update title every 20 minutes
@@ -164,7 +211,9 @@
     setInterval(updateCurrentCondTitle, 300000); // Update current condition title 5 minutes
     setInterval(updateCurrentCondValue, 300000); // Update current condition value 5 minutes
     setInterval(updateCurrentCondImage, 300000); // Update current condition image every 5 min
+    setInterval(updateForecastCond24h, 1800000); // Update forecast every 30 minutes
     setInterval(updatePlot, 1800000); // Update plot every 30 minutes
+
   </script>
 </body>
 </html>
