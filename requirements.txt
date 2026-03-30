@@ -1,9 +1,9 @@
 flask
-ansi2html
 pandas
 matplotlib
 lunardate
-art
 pytz
 geopy
 timezonefinder
+scipy
+numpy

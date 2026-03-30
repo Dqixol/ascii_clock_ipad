@@ -1,4 +1,3 @@
-from art import text2art
 import datetime
 import subprocess
 from lunardate import LunarDate
@@ -7,9 +6,35 @@ import pytz
 import pandas as pd
 import geopy
 from timezonefinder import TimezoneFinder
+from io import StringIO
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+plt.style.use('dark_background')
+import matplotlib.dates as mdates
+import numpy as np
 
 from forcast_doi import hourly_doi, air_quality_doi, hourly_url, air_quality_url, current_url, current_doi
 wmo_codes = json.load(open("wmo.json", "r"))
+
+colour_dict = {
+    'polar_night' : '#2E3440',
+    'polar_dawn'   : '#3B4252',
+    'polar_dusk'    : '#434C5E',
+    'polar_day'   : '#4C566A',
+    'snow_storm' : '#D8DEE9',
+    'snow'       : '#E5E9F0',
+    'snow_melt'  : '#ECEFF4',
+    'frost_green' : '#8FBCBB',
+    'frost_cyan'  : '#88C0D0',
+    'frost_blue'  : '#81A1C1',
+    'frost_dblue' : '#5E81AC',
+    'aurora_red'  : '#BF616A',
+    'aurora_orange' : '#D08770',
+    'aurora_yellow' : '#EBCB8B',
+    'aurora_green' : '#A3BE8C',
+    'aurora_purple' : '#B48EAD',
+}
 
 def determine_th_st_nd_rd(day):
     if 4 <= day <= 20 or 24 <= day <= 30:
@@ -47,6 +72,7 @@ class weatherInfo:
         self.tz = TimezoneFinder().timezone_at(lng=self.gps_coords[1], lat=self.gps_coords[0])
         self.pytz = pytz.timezone(self.tz) if self.tz else None
         self.df_forcast = None
+        self.df_forcast_smoothed = None
         self.df_air_quality = None
         self.getCurrentCondition()
         self.getDoI()
@@ -110,22 +136,86 @@ class weatherInfo:
         df_air_quality["time"] = [self.pytz.localize(datetime.datetime.fromisoformat(t)) for t in df_air_quality["time"]]
         df_air_quality = df_air_quality[df_air_quality["time"] >= now - datetime.timedelta(minutes=60)]
         df_air_quality = df_air_quality[df_air_quality["time"] < now + datetime.timedelta(days=1, hours=1)]
+        self.df_forcast = df_forcast
         try:
-            df_air_quality = df_air_quality.set_index("time").drop_duplicates().resample(datetime.timedelta(minutes=1)).interpolate().reset_index()
-        except:
+            df_forcast_smoothed = df_forcast.set_index("time").drop_duplicates().resample(datetime.timedelta(minutes=1)).interpolate(method='cubic').reset_index()
+            df_air_quality = df_air_quality.set_index("time").drop_duplicates().resample(datetime.timedelta(minutes=1)).interpolate(method='cubic').reset_index()
+        except Exception as e:
+            print("Error processing weather data:")
+            print(e)
             pass
         self.forcast_last_update_time = datetime.datetime.now(tz=self.pytz)
-        self.df_forcast = df_forcast
+        self.df_forcast_smoothed = df_forcast_smoothed
         self.df_air_quality = df_air_quality
+
+    def plot(self):
+        self.getDoI()
+        legend_kwargs = {"loc": "upper right", "frameon" : False, "fontsize": 12}
+        fig, axs = plt.subplots(2, 2, figsize=(12, 3.5))
+        for ax in axs.flat:
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Hh'))
+            ax.set_xlim(self.df_forcast_smoothed["time"].min(), self.df_forcast_smoothed["time"].max())
+        # ax00:
+        for ax in [axs[0,0]]:
+            ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["temperature_2m"], label="Temperature [°C]", color=colour_dict["aurora_orange"])
+            ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["apparent_temperature"], label="Feels Like [°C]", color=colour_dict["frost_cyan"])
+            min_temp = min(self.df_forcast_smoothed["temperature_2m"].min(), self.df_forcast_smoothed["apparent_temperature"].min())
+            max_temp = max(self.df_forcast_smoothed["temperature_2m"].max(), self.df_forcast_smoothed["apparent_temperature"].max())
+            ax.set_ylim(min_temp -5, max_temp + 5)
+            ax.legend(**legend_kwargs, ncol=2)
+            ax.get_xaxis().set_visible(False)
+        for ax in [axs[0,1]]:
+            ax.bar(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["precipitation"]*4.0, label="Prec. [mm/h]", color=colour_dict["frost_green"], width = 0.005)
+            ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["precipitation_probability"]/100.0, label="Perc. Prob.", color=colour_dict["frost_cyan"])
+            ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["cloud_cover"]/100.0, label="Cloud Cover", color=colour_dict["snow_storm"])
+            ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["relative_humidity_2m"]/100.0, label="Humidity", color=colour_dict["aurora_green"])
+            ax.legend(**legend_kwargs, ncol=2)
+            ax.get_xaxis().set_visible(False)
+            ax.plot(self.df_forcast_smoothed["time"], np.ones_like(self.df_forcast_smoothed["time"]), color=colour_dict["snow_melt"], alpha=0.3, linestyle="--")
+            ax.set_ylim(0, 2 if self.df_forcast_smoothed["precipitation"].max() < 2 else self.df_forcast_smoothed["precipitation"].max() + 1)
+        for ax in [axs[1, 0]]:
+            if self.df_air_quality["birch_pollen"].max() > 5: 
+                dominant_allergen = "birch_pollen"
+            else: 
+                allergen_cols = ['alder_pollen', 'grass_pollen', 'mugwort_pollen', 'olive_pollen', 'ragweed_pollen']
+                dominant_allergen = self.df_air_quality[allergen_cols].max().idxmax()
+            ax.plot(self.df_air_quality["time"], self.df_air_quality[dominant_allergen], label=f"{dominant_allergen.replace('_', ' ').title()} [grains/m³]", alpha=0.0)
+            ax.legend(**legend_kwargs)
+            ax.set_ylim(0, 50 if self.df_air_quality[dominant_allergen].max() < 50 else self.df_air_quality[dominant_allergen].max() + 20)
+            df_allergen_0_10 = self.df_air_quality.query(f"{dominant_allergen} >= 0 and {dominant_allergen} < 10")
+            df_allergen_10_20 = self.df_air_quality.query(f"{dominant_allergen} >= 10 and {dominant_allergen} < 20")
+            df_allergen_20_100 = self.df_air_quality.query(f"{dominant_allergen} >= 20 and {dominant_allergen} < 100")
+            df_allergen_100 = self.df_air_quality.query(f"{dominant_allergen} >= 100")
+            ax.bar(df_allergen_0_10["time"],   df_allergen_0_10[dominant_allergen],   color=colour_dict["aurora_green"],  width = 0.002)
+            ax.bar(df_allergen_10_20["time"], df_allergen_10_20[dominant_allergen], color=colour_dict["aurora_yellow"], width = 0.002)
+            ax.bar(df_allergen_20_100["time"], df_allergen_20_100[dominant_allergen], color=colour_dict["aurora_red"], width = 0.002)
+            ax.bar(df_allergen_100["time"],    df_allergen_100[dominant_allergen],    color=colour_dict["aurora_purple"],    width = 0.002)
+
+        for ax in [axs[1, 1]]:
+            ax.plot(self.df_air_quality["time"], self.df_air_quality["european_aqi"], label="European AQI", alpha=0.0)
+            ax.legend(**legend_kwargs)
+            ax.set_ylim(20 if self.df_air_quality["european_aqi"].min() > 20 else self.df_air_quality["european_aqi"].min() - 10, 50 if self.df_air_quality["european_aqi"].max() < 50 else self.df_air_quality["european_aqi"].max() + 10)
+            df_aqi_0_50 = self.df_air_quality.query("european_aqi >= 0 and european_aqi < 50")
+            df_aqi_50_100 = self.df_air_quality.query("european_aqi >= 50 and european_aqi < 100")
+            df_aqi_100_150 = self.df_air_quality.query("european_aqi >= 100 and european_aqi < 150")
+            df_aqi_150 = self.df_air_quality.query("european_aqi >= 150")
+            ax.bar(df_aqi_0_50["time"],   df_aqi_0_50["european_aqi"],   color=colour_dict["frost_cyan"],  width = 0.002)
+            ax.bar(df_aqi_50_100["time"], df_aqi_50_100["european_aqi"], color=colour_dict["aurora_green"], width = 0.002)
+            ax.bar(df_aqi_100_150["time"], df_aqi_100_150["european_aqi"], color=colour_dict["aurora_yellow"], width = 0.002)
+            ax.bar(df_aqi_150["time"],    df_aqi_150["european_aqi"],    color=colour_dict["aurora_red"],    width = 0.002)
+
+        fig.tight_layout()
+        buf = StringIO()
+        fig.savefig(buf, format="svg", bbox_inches="tight", transparent=True)
+        plt.close(fig)
+        return buf.getvalue()
 
     def getFutureCondition(self):
         now = datetime.datetime.now(tz=self.pytz)
-        if self.df_forcast is None or (datetime.datetime.now(tz=self.pytz) - self.forcast_last_update_time).total_seconds() > 30*60:
-            self.getDoI()
+        self.getDoI()
         df_future_cond = self.df_forcast[["time", "weather_code"]]
-        df_future_cond['code_diff'] = df_future_cond['weather_code'].diff().fillna(0).astype(int)
-        df_future_cond = df_future_cond[df_future_cond["code_diff"] != 0]
         df_future_cond = df_future_cond[df_future_cond["time"] > now]
+        df_future_cond = df_future_cond.head(24).iloc[::2]
         df_future_cond['time'] = df_future_cond['time'].dt.strftime('%H')
         df_future_cond['is_day'] = df_future_cond['time'].astype(int).apply(lambda x: 1 if 7 <= x and x <= 18 else 0)
         df_future_cond["wmo_description"] = df_future_cond[["weather_code", "is_day"]].apply(lambda row: wmo_codes.get(str(row["weather_code"]), {}).get('day' if row["is_day"] else "night", {}).get("description", f"Unknown code {row['weather_code']}"), axis=1)
@@ -155,14 +245,18 @@ class weatherInfo:
         now = datetime.datetime.now(tz=self.pytz)
         if self.weather_now is None or (now - self.cond_last_update_time).total_seconds() > 20*60:
             self.getCurrentCondition()
-        return  f'|               \n' +\
-                f'|               \n' +\
-                f'|  Temperature: \n' +\
-                f'|  Humidity:    \n' +\
-                f'|  Cloud cover: \n' +\
-                f'|  Wind:        \n', \
+        if (now - self.cond_last_update_time).total_seconds() > 60:
+            updated_text = f'Updated {(now - self.cond_last_update_time).total_seconds()/60:.0f} mins ago' 
+        else: 
+            updated_text = f'Updated just now'
+        return  f'Outdoor:     \n' +\
+                f'             \n' +\
+                f'Temperature: \n' +\
+                f'Humidity:    \n' +\
+                f'Cloud cover: \n' +\
+                f'Wind:        \n', \
                 \
-                f'Updated {(now - self.cond_last_update_time).total_seconds()/60:.0f} mins ago\n' + \
+                f'{updated_text}\n' + \
                 f'{self.weather_now["wmo_description"]}\n' + \
                 f'{self.weather_now["temperature_2m"]}; feels like {self.weather_now["apparent_temperature"]}\n' + \
                 f'{self.weather_now["relative_humidity_2m"]}\n' + \
