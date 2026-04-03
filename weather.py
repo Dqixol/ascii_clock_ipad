@@ -177,8 +177,10 @@ class weatherInfo:
             if self.df_air_quality["birch_pollen"].max() > 5: 
                 dominant_allergen = "birch_pollen"
             else: 
-                allergen_cols = ['alder_pollen', 'grass_pollen', 'mugwort_pollen', 'olive_pollen', 'ragweed_pollen']
+                allergen_cols = ['alder_pollen', 'grass_pollen', 'mugwort_pollen', 'olive_pollen', 'ragweed_pollen', 'birch_pollen']
                 dominant_allergen = self.df_air_quality[allergen_cols].max().idxmax()
+            if self.df_air_quality[dominant_allergen].max() == 0:
+                ax.text(0.5, 0.5, "No significant allergen levels detected", horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12)
             ax.plot(self.df_air_quality["time"], self.df_air_quality[dominant_allergen], label=f"{dominant_allergen.replace('_', ' ').title()} [grains/m³]", alpha=0.0)
             ax.legend(**legend_kwargs)
             ax.set_ylim(0, 50 if self.df_air_quality[dominant_allergen].max() < 50 else self.df_air_quality[dominant_allergen].max() + 20)
@@ -207,8 +209,7 @@ class weatherInfo:
         fig.tight_layout()
         buf = StringIO()
         fig.savefig(buf, format="svg", bbox_inches="tight", transparent=True)
-        plt.close(fig)
-        return buf.getvalue()
+        return fig, buf.getvalue()
 
     def getFutureCondition(self):
         now = datetime.datetime.now(tz=self.pytz)
