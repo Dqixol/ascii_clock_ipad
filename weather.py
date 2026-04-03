@@ -180,18 +180,19 @@ class weatherInfo:
                 allergen_cols = ['alder_pollen', 'grass_pollen', 'mugwort_pollen', 'olive_pollen', 'ragweed_pollen', 'birch_pollen']
                 dominant_allergen = self.df_air_quality[allergen_cols].max().idxmax()
             if self.df_air_quality[dominant_allergen].max() == 0:
-                ax.text(0.5, 0.5, "No significant allergen levels detected", horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12)
-            ax.plot(self.df_air_quality["time"], self.df_air_quality[dominant_allergen], label=f"{dominant_allergen.replace('_', ' ').title()} [grains/m³]", alpha=0.0)
-            ax.legend(**legend_kwargs)
-            ax.set_ylim(0, 50 if self.df_air_quality[dominant_allergen].max() < 50 else self.df_air_quality[dominant_allergen].max() + 20)
-            df_allergen_0_10 = self.df_air_quality.query(f"{dominant_allergen} >= 0 and {dominant_allergen} < 10")
-            df_allergen_10_20 = self.df_air_quality.query(f"{dominant_allergen} >= 10 and {dominant_allergen} < 20")
-            df_allergen_20_100 = self.df_air_quality.query(f"{dominant_allergen} >= 20 and {dominant_allergen} < 100")
-            df_allergen_100 = self.df_air_quality.query(f"{dominant_allergen} >= 100")
-            ax.bar(df_allergen_0_10["time"],   df_allergen_0_10[dominant_allergen],   color=colour_dict["aurora_green"],  width = 0.002)
-            ax.bar(df_allergen_10_20["time"], df_allergen_10_20[dominant_allergen], color=colour_dict["aurora_yellow"], width = 0.002)
-            ax.bar(df_allergen_20_100["time"], df_allergen_20_100[dominant_allergen], color=colour_dict["aurora_red"], width = 0.002)
-            ax.bar(df_allergen_100["time"],    df_allergen_100[dominant_allergen],    color=colour_dict["aurora_purple"],    width = 0.002)
+                ax.text(0.5, 0.5, "No significant allergen forcasted", horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12)
+            else:
+                ax.plot(self.df_air_quality["time"], self.df_air_quality[dominant_allergen], label=f"{dominant_allergen.replace('_', ' ').title()} [grains/m³]", alpha=0.0)
+                ax.legend(**legend_kwargs)
+                ax.set_ylim(0, 50 if self.df_air_quality[dominant_allergen].max() < 50 else self.df_air_quality[dominant_allergen].max() + 20)
+                df_allergen_0_10 = self.df_air_quality.query(f"{dominant_allergen} >= 0 and {dominant_allergen} < 10")
+                df_allergen_10_20 = self.df_air_quality.query(f"{dominant_allergen} >= 10 and {dominant_allergen} < 20")
+                df_allergen_20_100 = self.df_air_quality.query(f"{dominant_allergen} >= 20 and {dominant_allergen} < 100")
+                df_allergen_100 = self.df_air_quality.query(f"{dominant_allergen} >= 100")
+                ax.bar(df_allergen_0_10["time"],   df_allergen_0_10[dominant_allergen],   color=colour_dict["aurora_green"],  width = 0.002)
+                ax.bar(df_allergen_10_20["time"], df_allergen_10_20[dominant_allergen], color=colour_dict["aurora_yellow"], width = 0.002)
+                ax.bar(df_allergen_20_100["time"], df_allergen_20_100[dominant_allergen], color=colour_dict["aurora_red"], width = 0.002)
+                ax.bar(df_allergen_100["time"],    df_allergen_100[dominant_allergen],    color=colour_dict["aurora_purple"],    width = 0.002)
 
         for ax in [axs[1, 1]]:
             ax.plot(self.df_air_quality["time"], self.df_air_quality["european_aqi"], label="European AQI", alpha=0.0)
@@ -209,7 +210,8 @@ class weatherInfo:
         fig.tight_layout()
         buf = StringIO()
         fig.savefig(buf, format="svg", bbox_inches="tight", transparent=True)
-        return fig, buf.getvalue()
+        plt.close(fig)
+        return buf.getvalue()
 
     def getFutureCondition(self):
         now = datetime.datetime.now(tz=self.pytz)
