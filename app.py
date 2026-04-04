@@ -1,9 +1,19 @@
+from time import time
+
 from flask import Flask, render_template, Response, send_file, jsonify
 import weather
 
 app = Flask(__name__)
 
-weather_info = weather.weatherInfo("BS1 1NR")
+while True:
+    try:
+        weather_info = weather.weatherInfo("BS1 1NR")
+        break
+    except Exception as e:
+        print("Error fetching weather data:", e)
+        print("Retrying in 5 seconds...")
+        time.sleep(5)
+
 
 @app.route("/")
 def index():
@@ -51,4 +61,4 @@ def forecastCond24h():
     return jsonify(json_from_df)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3000, debug=False)
+    app.run(host="0.0.0.0", port=8000, debug=False)

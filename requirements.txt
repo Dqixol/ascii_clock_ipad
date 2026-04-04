@@ -7,3 +7,4 @@ geopy
 timezonefinder
 scipy
 numpy
+uwsgi

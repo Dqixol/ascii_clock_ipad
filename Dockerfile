@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["python", "app.py"]
+CMD ["uwsgi", "--http", "0:0:0:0:8000", "--master", "-p", "4", "-w", "wsgi:app"]
