@@ -236,10 +236,7 @@ class weatherInfo:
     
     def getTimeArt(self):
         now = datetime.datetime.now(tz=self.pytz)
-        hour_str = now.strftime("%H")
-        minute_str = now.strftime("%M")
-        dot_str = ":" if now.second % 2 == 0 else " "
-        return f'{hour_str}{dot_str}{minute_str}'
+        return now.strftime("%H:%M:%S")
     
     def getTitleArt(self):
         now = datetime.datetime.now(tz=self.pytz)

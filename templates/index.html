@@ -72,6 +72,21 @@
             white-space: nowrap;
         }
 
+        #timeColon {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                filter: brightness(1);
+            }
+            50% {
+                opacity: 0.1;
+                filter: brightness(0.7);
+            }
+        }
+
         #currentCondImg {
             width: 10%;
             height: auto;
@@ -114,6 +129,10 @@
             height: auto;
         }
 
+        .forecast-item pre {
+            padding-top: 0.2vh;
+        }
+
         .plot-block {
             display: flex;
             justify-content: center;
@@ -147,7 +166,9 @@
             <pre id="dateText"></pre>
         </div>
           <div class="time-cond">
-            <pre id="timeText"></pre>
+            <pre id="timeText">
+                <span id="timeHour">12</span><span id="timeColon">:</span><span id="timeMinute">34</span>
+            </pre>
             <img id="currentCondImg" alt="current condition">
             <pre id="currentCondText"></pre>
         </div>
@@ -188,7 +209,7 @@
                 .then(text => {
                     const el = document.getElementById("titleText");
                     el.textContent = text;
-                    fitText("titleText", 100, 0.6, true);
+                    fitText("titleText", 100, 0.6, false);
                 });
         }
 
@@ -202,16 +223,42 @@
                 });
         }
 
-        function updateTime(fit = false) {
+        let currentTime = null;
+
+        function syncTime(fit = false) {
             fetch("/timeText")
                 .then(res => res.text())
                 .then(text => {
-                    const el = document.getElementById("timeText");
-                    el.textContent = text;
+                    // assume format "HH:MM:SS"
+                    // console.log(`Fetched timeText: ${text}`);
+                    const [h, m, s] = text.split(":").map(Number);
+
+                    const now = new Date();
+                    now.setHours(h, m, s, 0);
+
+                    currentTime = now;
+                    renderTime();
                     if (fit) {
                         fitText("timeText", 200, 0.33);
                     }
                 });
+        }
+
+        function tick() {
+            if (!currentTime) return;
+
+            currentTime.setSeconds(currentTime.getSeconds() + 1);
+            renderTime();
+        }
+
+        function renderTime() {
+            const h = String(currentTime.getHours()).padStart(2, "0");
+            const m = String(currentTime.getMinutes()).padStart(2, "0");
+            const s = String(currentTime.getSeconds()).padStart(2, "0");
+
+            document.getElementById("timeHour").textContent = h;
+            document.getElementById("timeMinute").textContent = m;
+            // console.log(`Updated time display: ${h}:${m}:${s}`);
         }
 
         function updateCurrentCond() {
@@ -271,7 +318,7 @@
 
         updateTitle();
         updateDate();
-        updateTime(true);
+        syncTime(true);
         updateCurrentCond();
         updateCurrentCondImage();
         updateForecastCond24h();
@@ -280,15 +327,16 @@
         window.addEventListener("resize", () => {
             updateTitle();
             updateDate();
-            updateTime(true);
+            syncTime(true);
             updateCurrentCond();
             updateCurrentCondImage();
             updateForecastCond24h();
         });
 
+        setInterval(tick, 1000);
+        setInterval(syncTime, 300000); // every 5 min
         setInterval(updateTitle, 120000);            // Update title every 20 minutes
         setInterval(updateDate, 600000);             // Update date every 10 minutes (to catch day change)
-        setInterval(updateTime, 1000);               // Update time every second
         setInterval(updateCurrentCond, 60000);       // Update current condition every minute
         setInterval(updateCurrentCondImage, 300000); // Update current condition image every 5 min
         setInterval(updateForecastCond24h, 1800000); // Update forecast every 30 minutes
