@@ -112,21 +112,21 @@
 	"61":{
 		"day":{
 			"description":"Light Rain",
-			"image":"shower_rain"
+			"image":"showers_rain"
 		},
 		"night":{
 			"description":"Light Rain",
-			"image":"shower_rain"
+			"image":"showers_rain"
 		}
 	},
 	"63":{
 		"day":{
 			"description":"Rain",
-			"image":"shower_rain"
+			"image":"showers_rain"
 		},
 		"night":{
 			"description":"Rain",
-			"image":"shower_rain"
+			"image":"showers_rain"
 		}
 	},
 	"65":{
@@ -202,21 +202,21 @@
 	"80":{
 		"day":{
 			"description":"Light Showers",
-			"image":"shower_rain"
+			"image":"showers_rain"
 		},
 		"night":{
 			"description":"Light Showers",
-			"image":"shower_rain"
+			"image":"showers_rain"
 		}
 	},
 	"81":{
 		"day":{
 			"description":"Showers",
-			"image":"shower_rain"
+			"image":"showers_rain"
 		},
 		"night":{
 			"description":"Showers",
-			"image":"shower_rain"
+			"image":"showers_rain"
 		}
 	},
 	"82":{

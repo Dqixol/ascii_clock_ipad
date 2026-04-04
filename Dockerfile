@@ -2,8 +2,9 @@ FROM python:3.14-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+
 RUN apt update && apt upgrade && apt -y install curl
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
