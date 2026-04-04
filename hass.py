@@ -152,7 +152,7 @@ def getPlot(tz, hours=6):
             ax.fill_between(df['time'], 28, 32, color=colour_dict['aurora_orange'], alpha=0.25)
             ax.fill_between(df['time'], 32, 36, color=colour_dict['aurora_red'], alpha=0.25)
             ax.fill_between(df['time'], 36, 50, color=colour_dict['aurora_purple'], alpha=0.25)
-            ax.plot(df['time'], df['state'], label=f'{friendly_name} @ {df["state"].iloc[-1]:.0f} {unit}', color=colour_dict['aurora_orange'])
+            ax.plot(df['time'], df['state'], label=f'{friendly_name} @ {df["state"].iloc[-1]:.1f} {unit}', color=colour_dict['aurora_orange'])
         if endpoint == 'sensor.first_air_quality_monitor_humidity':
             ax.set_ylim(df['state'].min() - 10, df['state'].max() + 10)
             ax.plot(df['time'], df['state'], label=f'{friendly_name} @ {df["state"].iloc[-1]:.0f} {unit}', color=colour_dict['aurora_green'])

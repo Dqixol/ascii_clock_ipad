@@ -146,6 +146,7 @@ class weatherInfo:
             pass
         self.forcast_last_update_time = datetime.datetime.now(tz=self.pytz)
         self.df_forcast_smoothed = df_forcast_smoothed
+        self.df_forcast_smoothed['cloud_cover'] = self.df_forcast_smoothed['cloud_cover'].clip(upper=100).clip(lower=0.0)
         self.df_air_quality = df_air_quality
 
     def plot(self):
