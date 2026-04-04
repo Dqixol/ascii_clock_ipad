@@ -8,3 +8,4 @@ timezonefinder
 scipy
 numpy
 gunicorn
+requests
