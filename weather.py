@@ -218,7 +218,7 @@ class weatherInfo:
         self.getDoI()
         df_future_cond = self.df_forcast[["time", "weather_code"]]
         df_future_cond = df_future_cond[df_future_cond["time"] > now]
-        df_future_cond = df_future_cond.head(24).iloc[::2]
+        df_future_cond = df_future_cond.head(12)
         df_future_cond['time'] = df_future_cond['time'].dt.strftime('%H')
         df_future_cond['is_day'] = df_future_cond['time'].astype(int).apply(lambda x: 1 if 7 <= x and x <= 18 else 0)
         df_future_cond["wmo_description"] = df_future_cond[["weather_code", "is_day"]].apply(lambda row: wmo_codes.get(str(row["weather_code"]), {}).get('day' if row["is_day"] else "night", {}).get("description", f"Unknown code {row['weather_code']}"), axis=1)
