@@ -1,7 +1,8 @@
 from time import time
-
 from flask import Flask, render_template, Response, send_file, jsonify
+
 import weather
+import hass
 
 app = Flask(__name__)
 
@@ -34,21 +35,16 @@ def timeText():
     time = weather_info.getTimeArt()
     return time
 
-@app.route("/currentCondText1")
-def currentCondText1():
+@app.route("/currentCondText")
+def currentCondText():
     current_cond = weather_info.getCurrentCondArt()
     return current_cond[0]
-
-@app.route("/currentCondText2")
-def currentCondText2():
-    current_cond = weather_info.getCurrentCondArt()
-    return current_cond[1]
 
 
 @app.route("/currentCondImage")
 def currentCondImage():
     current_cond = weather_info.getCurrentCondArt()
-    return send_file(current_cond[2], mimetype="image/png")
+    return send_file(current_cond[1], mimetype="image/png")
 
 @app.route("/plot.svg")
 def plot_svg():
@@ -60,5 +56,10 @@ def forecastCond24h():
     json_from_df = weather_info.getFutureCondition()  # list of dicts
     return jsonify(json_from_df)
 
+@app.route("/indoorAirQualityPlot.svg")
+def indoor_air_quality_plot_svg():
+    svg = hass.getPlot(tz=weather_info.tz)
+    return Response(svg, mimetype="image/svg+xml")
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=False)
+    app.run(host="0.0.0.0", port=8000, debug=True)

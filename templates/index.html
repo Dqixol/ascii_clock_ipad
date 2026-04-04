@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <link href="https://iosevka-webfonts.github.io/iosevka-slab/iosevka-slab.css" rel="stylesheet" />
@@ -12,11 +12,8 @@
             background: #3B4252;
             color: #E5E9F0;
             display: flex;
-            justify-content: center;   /* keep horizontal centering */
-            align-items: flex-start;   /* move everything to top */
-            padding-top: 20px;         /* small breathing room */
-            display: flex;
-            place-items: center;
+            justify-content: flex-start;
+            align-items: flex-start;
             -webkit-user-select: none;
             user-select: none;
             overflow: hidden;
@@ -26,97 +23,121 @@
             margin: 0;
             font-family: 'Iosevka Slab Web', monospace;
         }
-        .wrap {
+        .wrap-left-col {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 24px;
+            align-items: center;   
+            gap: 2vh;
+            width: 67%;             
         }
 
         .title-block {
-            font-size: 16px;
+            width: 80%;
             text-align: center;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #titleText {
+            display: inline-block;
+            white-space: nowrap;
         }
 
         .date-block {
-            margin-top: -15px; /* Move date block up to reduce gap with title */
-            font-size: 120px;
             text-align: center;
+            align-items: center;
+            justify-content: center;
+            width: 80%;
         }
 
         #dateText {
             color: #81A1C1;
+            display: inline-block;
+            white-space: nowrap;
         }
 
         .time-cond {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            width: 80%;
+            gap: 2%;
         }
 
         #timeText {
-            font-size: 120px;
-            line-height: 1;
-            margin: 0;
-            padding: 0;
+            white-space: nowrap;
+            display: inline-block;
             white-space: nowrap;
         }
 
         #currentCondImg {
-            width: 80px;
+            width: 10%;
             height: auto;
-            margin-left: 3%;
+            margin-left:  3%;
             margin-right: 3%;
             flex: 0 0 auto;
         }
 
-        #currentCondText1 {
-            font-size: 16px;
-            margin: 0;
-            padding: 0;
-        }
-        #currentCondText2 {
-            font-size: 16px;
-            margin: 0;
-            padding: 0;
-            text-align: right;
+        #currentCondText {
+            flex: 0 0 auto;
+            display: inline-block;
         }
 
         .forecastCond24h {
-            margin-top: 15px;
             display: flex;
-            gap: 8px;
             overflow-x: auto;
+            width: 80%;
             align-items: center;
+            justify-content: center;
+            gap: 1%;
         }
 
         .forecast-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-width: 60px;
+            justify-content: center;
+            width: 6%;
+            margin-left: 1%;
+            margin-right: 1%;
+            text-align: center;
+        }
+
+        .forecast-item pre {
+            text-align: center;
         }
 
         .forecast-item img {
-            width: 40px;
+            width: 80%;
             height: auto;
         }
 
         .plot-block {
-            margin-top: -10px;
             display: flex;
             justify-content: center;
+            width: 80%;
         }
 
         #plots {
-            width: 90%;
             height: auto;
+            width: 100%;
         }
+        .wrap-right-col {
+            display: flex;
+            flex-direction: column;
+            align-items: left;   
+            gap: 2vh;
+            width: 33%;             
+        }
+        #indoor-air-quality-plot {
+            height: auto;
+            width: 85%;
+        }
+
     </style>
 </head>
 <body>
-    <div class="wrap">
+    <div class="wrap-left-col" id="wrap-left-col">
         <div class="title-block">
             <pre id="titleText"></pre>
         </div>
@@ -125,97 +146,153 @@
         </div>
           <div class="time-cond">
             <pre id="timeText"></pre>
-            <img id="currentCondImg" src="/currentCondImage" alt="current condition">
-            <pre id="currentCondText1"></pre>
-            <pre id="currentCondText2"></pre>
+            <img id="currentCondImg" alt="current condition">
+            <pre id="currentCondText"></pre>
         </div>
         <div id="forecastCond24h" class="forecastCond24h"></div>
         <div class="plot-block">
             <img id="plots" alt="plots">
         </div>
     </div>
+    <div class="wrap-right-col">
+        <img id="indoor-air-quality-plot" alt="Indoor Air Quality">
+    </div>
 
-  <script>
-    async function updateTitle() {
-      const res = await fetch("/titleText");
-      const text = await res.text();
-      document.getElementById("titleText").textContent = text;
-    }
+    <script>
+        function fitText(id, maxFontSize = 200, widthRatio = 0.9, log=false) {
+            const el = document.getElementById(id);
+            const wrap = document.getElementById('wrap-left-col');
 
-    async function updateDate() {
-      const res = await fetch("/dateText");
-      const text = await res.text();
-      document.getElementById("dateText").textContent = text;
-    }
+            let size = maxFontSize;
+            el.style.fontSize = size + "px";
 
-    async function updateTime() {
-      const res = await fetch("/timeText");
-      const text = await res.text();
-      document.getElementById("timeText").textContent = text;
-    }
+            const targetWidth = wrap.clientWidth * widthRatio;
 
-    async function updateCurrentCondTitle() {
-      const res = await fetch("/currentCondText1");
-      const text = await res.text();
-      document.getElementById("currentCondText1").textContent = text;
-    }
+            while (el.scrollWidth > targetWidth && size > 1) {
+                size -= 1;
+                el.style.fontSize = size + "px";
+                if (log) {
+                    console.log(`Trying font size: ${size}px, target width: ${targetWidth}px, actual width: ${el.scrollWidth}px`);
+                }
+            }
+            if (log) {
+                console.log(`Fitted ${id} to font size: ${size}px, target width: ${targetWidth}px, actual width: ${el.scrollWidth}px`);
+            }
+        }
 
-    async function updateCurrentCondValue() {
-      const res = await fetch("/currentCondText2");
-      const text = await res.text();
-      document.getElementById("currentCondText2").textContent = text;
-    }
+        function updateTitle() {
+            fetch("/titleText")
+                .then(res => res.text())
+                .then(text => {
+                    const el = document.getElementById("titleText");
+                    el.textContent = text;
+                    fitText("titleText", 100, 0.6, true);
+                });
+        }
 
-    function updateCurrentCondImage() {
-        document.getElementById("currentCondImg").src = "/currentCondImage?t=" + Date.now();
-    }
-    
-    function updatePlot() {
-      document.getElementById("plots").src = "/plot.svg?t=" + Date.now();
-    }
+        function updateDate() {
+            fetch("/dateText")
+                .then(res => res.text())
+                .then(text => {
+                    const el = document.getElementById("dateText");
+                    el.textContent = text;
+                    fitText("dateText", 200, 0.8);
+                });
+        }
 
-    async function updateForecastCond24h() {
-        const res = await fetch("/forecastCond24h");
-        const items = await res.json();
+        function updateTime(fit = false) {
+            fetch("/timeText")
+                .then(res => res.text())
+                .then(text => {
+                    const el = document.getElementById("timeText");
+                    el.textContent = text;
+                    if (fit) {
+                        fitText("timeText", 200, 0.33);
+                    }
+                });
+        }
 
-        const container = document.getElementById("forecastCond24h");
-        container.innerHTML = "";
+        function updateCurrentCond() {
+            fetch("/currentCondText")
+                .then(res => res.text())
+                .then(text => {
+                    const el = document.getElementById("currentCondText");
+                    el.textContent = text;
+                    fitText("currentCondText", 200, 0.33);
+                });
+        }
 
-        items.forEach(item => {
-            const div = document.createElement("div");
-            div.className = "forecast-item";
 
-            const time = document.createElement("pre");
-            time.textContent = item.time + "h";
+        function updateCurrentCondImage() {
+            document.getElementById("currentCondImg").src = "/currentCondImage?t=" + Date.now();
+        }
+        
+        function updatePlot() {
+            document.getElementById("plots").src = "/plot.svg?t=" + Date.now();
+        }
 
-            const img = document.createElement("img");
-            img.src = item.wmo_image_path;
-            img.alt = item.time + " " + item.wmo_description;
+        function updateIndoorAirQualityPlot() {
+            document.getElementById("indoor-air-quality-plot").src = "/indoorAirQualityPlot.svg?t=" + Date.now();
+        }
 
-            div.appendChild(img);
-            div.appendChild(time);
-            container.appendChild(div);
+        function fitForecastText() {
+            document.querySelectorAll(".forecast-item pre").forEach(el => {
+                fitText(el.id, 50, 0.03);
+            });
+        }
+
+        async function updateForecastCond24h() {
+            const res = await fetch("/forecastCond24h");
+            const items = await res.json();
+
+            const container = document.getElementById("forecastCond24h");
+            container.innerHTML = "";
+
+            items.forEach(item => {
+                const div = document.createElement("div");
+                div.className = "forecast-item";
+
+                const time = document.createElement("pre");
+                time.textContent = item.time + "h";
+                time.id = "forecastTime" + item.time;
+
+                const img = document.createElement("img");
+                img.src = item.wmo_image_path;
+                img.alt = item.time + " " + item.wmo_description;
+
+                div.appendChild(img);
+                div.appendChild(time);
+                container.appendChild(div);
+            });
+            fitForecastText();
+        }
+
+        updateTitle();
+        updateDate();
+        updateTime(true);
+        updateCurrentCond();
+        updateCurrentCondImage();
+        updateForecastCond24h();
+        updatePlot();
+        updateIndoorAirQualityPlot();
+        window.addEventListener("resize", () => {
+            updateTitle();
+            updateDate();
+            updateTime(true);
+            updateCurrentCond();
+            updateCurrentCondImage();
+            updateForecastCond24h();
         });
-    }
 
-    updateTitle();
-    updateDate();
-    updateTime();
-    updateCurrentCondTitle();
-    updateCurrentCondValue();
-    updateCurrentCondImage();
-    updateForecastCond24h();
-    updatePlot();
+        setInterval(updateTitle, 120000);            // Update title every 20 minutes
+        setInterval(updateDate, 600000);             // Update date every 10 minutes (to catch day change)
+        setInterval(updateTime, 1000);               // Update time every second
+        setInterval(updateCurrentCond, 60000);       // Update current condition every minute
+        setInterval(updateCurrentCondImage, 300000); // Update current condition image every 5 min
+        setInterval(updateForecastCond24h, 1800000); // Update forecast every 30 minutes
+        setInterval(updatePlot, 1800000);            // Update plot every 30 minutes
+        setInterval(updateIndoorAirQualityPlot, 300000); // Update indoor air quality plot every 5 minutes
 
-    setInterval(updateTitle, 120000);            // Update title every 20 minutes
-    setInterval(updateDate, 600000);             // Update date every 10 minutes (to catch day change)
-    setInterval(updateTime, 1000);               // Update time every second
-    setInterval(updateCurrentCondTitle, 60000); // Update current condition title every minute
-    setInterval(updateCurrentCondValue, 60000); // Update current condition value every minute
-    setInterval(updateCurrentCondImage, 300000); // Update current condition image every 5 min
-    setInterval(updateForecastCond24h, 1800000); // Update forecast every 30 minutes
-    setInterval(updatePlot, 1800000);            // Update plot every 30 minutes
-
-  </script>
+    </script>
 </body>
 </html>

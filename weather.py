@@ -100,13 +100,13 @@ class weatherInfo:
             image_path = 'static/google-weather-icons/sets/set-2/tornado.png'
             description = f"Unknown Weather code {dict_current['current']['weather_code']}"
         condition_to_print = {
-            "temperature_2m": f"{dict_current['current']['temperature_2m']}{dict_current['current_units']['temperature_2m']}",
-            "apparent_temperature": f"{dict_current['current']['apparent_temperature']}{dict_current['current_units']['apparent_temperature']}",
-            "relative_humidity_2m": f"{dict_current['current']['relative_humidity_2m']}{dict_current['current_units']['relative_humidity_2m']}",
-            "cloud_cover": f"{dict_current['current']['cloud_cover']}{dict_current['current_units']['cloud_cover']}",
-            "surface_pressure" : f"{dict_current['current']['surface_pressure']}{dict_current['current_units']['surface_pressure']}",
-            "wind_speed_10m" : f"{dict_current['current']['wind_speed_10m']}{dict_current['current_units']['wind_speed_10m']}",
-            "wind_gusts_10m" : f"{dict_current['current']['wind_gusts_10m']}{dict_current['current_units']['wind_gusts_10m']}",
+            "temperature_2m": f"{float(dict_current['current']['temperature_2m']):.0f}{dict_current['current_units']['temperature_2m']}",
+            "apparent_temperature": f"{float(dict_current['current']['apparent_temperature']):.0f}{dict_current['current_units']['apparent_temperature']}",
+            "relative_humidity_2m": f"{float(dict_current['current']['relative_humidity_2m']):.0f}{dict_current['current_units']['relative_humidity_2m']}",
+            "cloud_cover": f"{float(dict_current['current']['cloud_cover']):.0f}{dict_current['current_units']['cloud_cover']}",
+            "surface_pressure" : f"{float(dict_current['current']['surface_pressure']):.0f}{dict_current['current_units']['surface_pressure']}",
+            "wind_speed_10m" : f"{float(dict_current['current']['wind_speed_10m']):.0f}{dict_current['current_units']['wind_speed_10m']}",
+            "wind_gusts_10m" : f"{float(dict_current['current']['wind_gusts_10m']):.0f}{dict_current['current_units']['wind_gusts_10m']}",
             "wmo_description": description,
             "wmo_image_path": image_path,
         }
@@ -165,7 +165,7 @@ class weatherInfo:
             ax.legend(**legend_kwargs, ncol=2)
             ax.get_xaxis().set_visible(False)
         for ax in [axs[0,1]]:
-            ax.bar(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["precipitation"], label="Prec. [mm/h]", color=colour_dict["frost_green"], width = 0.005)
+            ax.bar(self.df_forcast["time"], self.df_forcast["precipitation"], label="Prec. [mm/h]", color=colour_dict["frost_green"], width = 0.03)
             ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["precipitation_probability"]/100.0, label="Perc. Prob.", color=colour_dict["frost_cyan"])
             ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["cloud_cover"]/100.0, label="Cloud Cover", color=colour_dict["snow_storm"])
             ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["relative_humidity_2m"]/100.0, label="Humidity", color=colour_dict["aurora_green"])
@@ -182,30 +182,24 @@ class weatherInfo:
             if self.df_air_quality[dominant_allergen].max() == 0:
                 ax.text(0.5, 0.5, "No significant allergen forcasted", horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12)
             else:
-                ax.plot(self.df_air_quality["time"], self.df_air_quality[dominant_allergen], label=f"{dominant_allergen.replace('_', ' ').title()} [grains/m³]", alpha=0.0)
+                ax.plot(self.df_air_quality["time"], self.df_air_quality[dominant_allergen], label=f"{dominant_allergen.replace('_', ' ').title()} [grains/m³]", color = colour_dict['aurora_purple'])
                 ax.legend(**legend_kwargs)
-                ax.set_ylim(0, 50 if self.df_air_quality[dominant_allergen].max() < 50 else self.df_air_quality[dominant_allergen].max() + 20)
-                df_allergen_0_10 = self.df_air_quality.query(f"{dominant_allergen} >= 0 and {dominant_allergen} < 10")
-                df_allergen_10_20 = self.df_air_quality.query(f"{dominant_allergen} >= 10 and {dominant_allergen} < 20")
-                df_allergen_20_100 = self.df_air_quality.query(f"{dominant_allergen} >= 20 and {dominant_allergen} < 100")
-                df_allergen_100 = self.df_air_quality.query(f"{dominant_allergen} >= 100")
-                ax.bar(df_allergen_0_10["time"],   df_allergen_0_10[dominant_allergen],   color=colour_dict["aurora_green"],  width = 0.002)
-                ax.bar(df_allergen_10_20["time"], df_allergen_10_20[dominant_allergen], color=colour_dict["aurora_yellow"], width = 0.002)
-                ax.bar(df_allergen_20_100["time"], df_allergen_20_100[dominant_allergen], color=colour_dict["aurora_red"], width = 0.002)
-                ax.bar(df_allergen_100["time"],    df_allergen_100[dominant_allergen],    color=colour_dict["aurora_purple"],    width = 0.002)
+                ax.set_ylim(self.df_air_quality[dominant_allergen].min() - 10 if self.df_air_quality[dominant_allergen].min() > 10 else 0, self.df_air_quality[dominant_allergen].max() * 1.3)
+                ax.fill_between(self.df_air_quality["time"], 0, 30, color=colour_dict["aurora_green"], alpha=0.25)
+                ax.fill_between(self.df_air_quality["time"], 30, 60, color=colour_dict["aurora_yellow"], alpha=0.25)
+                ax.fill_between(self.df_air_quality["time"], 60, 150, color=colour_dict["aurora_red"], alpha=0.25)
+                if self.df_air_quality[dominant_allergen].max() > 150:
+                    ax.fill_between(self.df_air_quality["time"], 150, self.df_air_quality[dominant_allergen].max() * 1.3, color=colour_dict["aurora_purple"], alpha=0.25)
 
         for ax in [axs[1, 1]]:
-            ax.plot(self.df_air_quality["time"], self.df_air_quality["european_aqi"], label="European AQI", alpha=0.0)
+            ax.set_ylim(self.df_air_quality["european_aqi"].min() - 10 if self.df_air_quality["european_aqi"].min() > 10 else 0, self.df_air_quality["european_aqi"].max() + 10)
+            ax.plot(self.df_air_quality["time"], self.df_air_quality["european_aqi"], label="European AQI", color = colour_dict["frost_cyan"])
             ax.legend(**legend_kwargs)
-            ax.set_ylim(20 if self.df_air_quality["european_aqi"].min() > 20 else self.df_air_quality["european_aqi"].min() - 10, 50 if self.df_air_quality["european_aqi"].max() < 50 else self.df_air_quality["european_aqi"].max() + 10)
-            df_aqi_0_50 = self.df_air_quality.query("european_aqi >= 0 and european_aqi < 50")
-            df_aqi_50_100 = self.df_air_quality.query("european_aqi >= 50 and european_aqi < 100")
-            df_aqi_100_150 = self.df_air_quality.query("european_aqi >= 100 and european_aqi < 150")
-            df_aqi_150 = self.df_air_quality.query("european_aqi >= 150")
-            ax.bar(df_aqi_0_50["time"],   df_aqi_0_50["european_aqi"],   color=colour_dict["frost_cyan"],  width = 0.002)
-            ax.bar(df_aqi_50_100["time"], df_aqi_50_100["european_aqi"], color=colour_dict["aurora_green"], width = 0.002)
-            ax.bar(df_aqi_100_150["time"], df_aqi_100_150["european_aqi"], color=colour_dict["aurora_yellow"], width = 0.002)
-            ax.bar(df_aqi_150["time"],    df_aqi_150["european_aqi"],    color=colour_dict["aurora_red"],    width = 0.002)
+            ax.fill_between(self.df_air_quality["time"], 0, 50, color=colour_dict["frost_cyan"], alpha=0.25)
+            ax.fill_between(self.df_air_quality["time"], 50, 100, color=colour_dict["aurora_green"], alpha=0.25)
+            ax.fill_between(self.df_air_quality["time"], 100, 150, color=colour_dict["aurora_yellow"], alpha=0.25)
+            ax.fill_between(self.df_air_quality["time"], 150, 250, color=colour_dict["aurora_red"], alpha=0.25)
+            ax.fill_between(self.df_air_quality["time"], 250, 500, color=colour_dict["aurora_purple"], alpha=0.25)
 
         fig.tight_layout()
         buf = StringIO()
@@ -252,18 +246,27 @@ class weatherInfo:
             updated_text = f'Updated {(now - self.cond_last_update_time).total_seconds()/60:.0f} mins ago' 
         else: 
             updated_text = f'Updated just now'
-        return  f'Outdoor:     \n' +\
-                f'             \n' +\
-                f'Temperature: \n' +\
-                f'Humidity:    \n' +\
-                f'Cloud cover: \n' +\
-                f'Wind:        \n', \
-                \
-                f'{updated_text}\n' + \
-                f'{self.weather_now["wmo_description"]}\n' + \
-                f'{self.weather_now["temperature_2m"]}; feels like {self.weather_now["apparent_temperature"]}\n' + \
-                f'{self.weather_now["relative_humidity_2m"]}\n' + \
-                f'{self.weather_now["cloud_cover"]}\n' + \
-                f'{self.weather_now["wind_speed_10m"]}; gusts {self.weather_now["wind_gusts_10m"]}', \
-                \
-                self.weather_now["wmo_image_path"]
+        
+        lines_latter_only = [
+            updated_text,
+            f"{self.weather_now['wmo_description']}",
+            f"{self.weather_now['temperature_2m']}; feels {self.weather_now['apparent_temperature']}",
+            f"{self.weather_now['relative_humidity_2m']}",
+            f"{self.weather_now['cloud_cover']}",
+            f"{self.weather_now['wind_speed_10m']}; gusts {self.weather_now['wind_gusts_10m']}",
+        ]
+
+        max_line_length = max(len(line) for line in lines_latter_only)
+        lines_latter_only = [line.rjust(max_line_length) for line in lines_latter_only]
+
+        lines_first_only = [
+            "Outdoor:     ",
+            "             ",
+            "Temperature: ",
+            "Humidity:    ", 
+            "Cloud cover: ",
+            "Wind:        ",
+        ]
+
+        lines_combined = [f"{first}{latter}" for first, latter in zip(lines_first_only, lines_latter_only)]
+        return '\n'.join(lines_combined), self.weather_now["wmo_image_path"]
