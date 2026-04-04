@@ -2,6 +2,7 @@ import requests
 import datetime
 import pandas as pd
 import matplotlib
+import numpy as np
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')
@@ -45,15 +46,30 @@ colour_dict = {
     'aurora_purple' : '#B48EAD',
 }
 
-def getPlot(tz, hours=12):
+AQI_dict = {
+    90: 'Great',
+    80: 'Good',
+    60: 'Moderate',
+    40: 'Unhealthy',
+    20: 'Very Unhealthy',
+     0: 'Hazardous',
+}
+
+VOC_dict = {
+    10: 'Great',
+    20: 'Moderate',
+    30: 'Unhealthy',
+    60: 'Hazardous',
+}
+
+def getDFs(tz):
     now = pd.Timestamp.now(tz=tz)
     dfs = {}
     for endpoint in endpoints:
         url = f"{base_url}{endpoint}"
         response = requests.get(url, headers=headers)
         response_json = response.json()
-        unit = response_json[0][0]['attributes'].get('unit_of_measurement')
-        unit = f'[{unit}]' if unit else ''
+        unit = response_json[0][0]['attributes'].get('unit_of_measurement', '')
         friendly_name = response_json[0][0]['attributes'].get('friendly_name', '')
         df = pd.DataFrame(response_json[0])
         df['state'] = df['state'].replace('unavailable', 'nan')
@@ -63,40 +79,55 @@ def getPlot(tz, hours=12):
         df = df[['state', 'time']]
         df.loc[len(df)] = {'state': float('nan'), 'time': now}
         df = df.set_index("time").resample(datetime.timedelta(minutes=1)).ffill().reset_index()
-        dfs[endpoint] = df, unit, friendly_name, response_json
+        dfs[endpoint] = df, unit, friendly_name
+    return dfs, now
 
+def getPlot(tz, hours=6):
+    dfs, now = getDFs(tz)
     fig, axs = plt.subplots(len(endpoints), 1, figsize=(6, 1.75 * len(endpoints)))
     for ax, endpoint in zip(axs,endpoints):
         legend_kwargs = {"loc": "upper right", "frameon" : False, "fontsize": 12}
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Hh'))
+        # ax.xaxis.set_major_formatter(mdates.DateFormatter('%Hh', tz=tz))
+        # ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=60))
+        # ax.xaxis.set_minor_locator(mdates.MinuteLocator(interval=30))
+        ax.xaxis.set(
+            major_locator=mdates.HourLocator(interval=1),
+            # minor_locator=mdates.MinuteLocator(interval=30),
+            major_formatter=mdates.DateFormatter("%Hh", tz=tz),
+        )
         ax.set_xlim(now - pd.Timedelta(hours=hours), now)
-        df, unit, friendly_name, response_json = dfs[endpoint]
+        ax.get_xaxis().set_visible(False)
+        df, unit, friendly_name = dfs[endpoint]
+        df = df[df['time'] >= now - pd.Timedelta(hours=hours)]
         friendly_name = friendly_name.split('Monitor ')[-1].title()
         friendly_name = f'Indoor {friendly_name}'
         if endpoint == 'sensor.first_air_quality_monitor_air_quality_index':
-            ax.set_ylim(df['state'].min() - 10 if df['state'].min() > 10 else 0, 100)
-            ax.plot(df['time'], df['state'], label=f'{friendly_name} {unit}', color = colour_dict['snow_storm'])
+            aqi_now = df['state'].iloc[-1]
+            aqi_band = AQI_dict[max([k for k in AQI_dict.keys() if k <= aqi_now])]
+            ax.set_ylim(df['state'].min() - (df['state'].max() - df['state'].min()) * 0.2 if df['state'].min() > 10 else 0, 130)
+            ax.plot(df['time'], df['state'], label=f'{friendly_name} @ {aqi_band}', color = colour_dict['snow_storm'])
             ax.fill_between(df['time'], 90,  100, color=colour_dict['frost_cyan'], alpha=0.25)
             ax.fill_between(df['time'], 80, 90, color=colour_dict['aurora_green'], alpha=0.25)
             ax.fill_between(df['time'], 60, 80, color=colour_dict['aurora_yellow'], alpha=0.25)
             ax.fill_between(df['time'], 40, 60, color=colour_dict['aurora_orange'], alpha=0.25)
             ax.fill_between(df['time'], 20, 40, color=colour_dict['aurora_red'], alpha=0.25)
             ax.fill_between(df['time'], 0, 20, color=colour_dict['aurora_purple'], alpha=0.25)
-            legend_kwargs["loc"] = "lower right"
         if endpoint == 'sensor.first_air_quality_monitor_pm10':
             friendly_name = "Indoor Particulate Matter"
-            ax.set_ylim(df['state'].min() - 10 if df['state'].min() > 10 else 0, df['state'].max() *1.2)
-            ax.plot(df['time'], df['state'], label=f'{friendly_name} {unit}', color = colour_dict['aurora_yellow'])
+            ax.set_ylim(df['state'].min() - 10 if df['state'].min() > 10 else 0, df['state'].max() *1.3)
+            ax.plot(df['time'], df['state'], label=f'{friendly_name} @ {df["state"].iloc[-1]:.0f} {unit}', color = colour_dict['aurora_yellow'])
             ax.fill_between(df['time'], 0, 20, color=colour_dict['aurora_green'], alpha=0.25)
             ax.fill_between(df['time'], 20, 50, color=colour_dict['aurora_yellow'], alpha=0.25)
             ax.fill_between(df['time'], 50, 150, color=colour_dict['aurora_orange'], alpha=0.25)
             ax.fill_between(df['time'], 150, 200, color=colour_dict['aurora_red'], alpha=0.25)
-            if df['state'].max() > 200:
-                ax.fill_between(df['time'], 150, df['state'].max() * 1.2, color=colour_dict['aurora_purple'], alpha=0.25)
+            if df['state'].max() > 100:
+                ax.fill_between(df['time'], 200, df['state'].max() * 1.3, color=colour_dict['aurora_purple'], alpha=0.25)
         if endpoint == 'sensor.first_air_quality_monitor_volatile_organic_compounds_index':
+            voc_now = df['state'].iloc[-1]
+            voc_band = VOC_dict[min([k for k in VOC_dict.keys() if k >= voc_now])]
             friendly_name = "Indoor VOC Index"
             ax.set_ylim(df['state'].min() - 10 if df['state'].min() > 10 else 0, df['state'].max() + 10 if df['state'].max() < 90 else 100)
-            ax.plot(df['time'], df['state'], label=f'{friendly_name} {unit}', color = colour_dict['frost_green'])
+            ax.plot(df['time'], df['state'], label=f'{friendly_name} @ {voc_band}', color = colour_dict['frost_green'])
             ax.fill_between(df['time'], 0, 10, color=colour_dict['aurora_green'], alpha=0.25)
             ax.fill_between(df['time'], 10, 20, color=colour_dict['aurora_yellow'], alpha=0.25)
             ax.fill_between(df['time'], 20, 30, color=colour_dict['aurora_orange'], alpha=0.25)
@@ -104,13 +135,14 @@ def getPlot(tz, hours=12):
             ax.fill_between(df['time'], 60, 100, color=colour_dict['aurora_purple'], alpha=0.25)
         if endpoint == 'sensor.first_air_quality_monitor_carbon_monoxide':
             friendly_name = "Indoor Carbon Monoxide"
-            ax.set_ylim(0, df['state'].max() * 1.2 if df['state'].max() > 0 else 1)
-            ax.bar(df['time'], df['state'], label=f'{friendly_name} {unit}', color=colour_dict['aurora_orange'], width=0.002)
+            ax.set_ylim(0, df['state'].max() * 1.3 if df['state'].max() > 0 else 1)
+            ax.bar(df['time'], df['state'], label=f'{friendly_name} @ {df["state"].iloc[-1]:.0f} {unit}', color=colour_dict['aurora_orange'], width=0.002)
             ax.fill_between(df['time'], 0, 5, color=colour_dict['aurora_green'], alpha=0.25)
             if df['state'].max() > 5:
-                ax.fill_between(df['time'], 5, df['state'].max() * 1.2, color=colour_dict['aurora_purple'], alpha=0.25)
+                ax.fill_between(df['time'], 5, df['state'].max() * 1.3, color=colour_dict['aurora_purple'], alpha=0.25)
             if df['state'].iloc[-1] > 5:
                 ax.text(0.5, 0.5, "High CO Levels, EVACUATE!!!", horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=15)
+            ax.get_xaxis().set_visible(True)
         if endpoint == 'sensor.first_air_quality_monitor_temperature':
             ax.set_ylim(df['state'].min() - 5, df['state'].max() + 5)
             ax.fill_between(df['time'], 0, 15, color=colour_dict['frost_dblue'], alpha=0.25)
@@ -120,10 +152,10 @@ def getPlot(tz, hours=12):
             ax.fill_between(df['time'], 28, 32, color=colour_dict['aurora_orange'], alpha=0.25)
             ax.fill_between(df['time'], 32, 36, color=colour_dict['aurora_red'], alpha=0.25)
             ax.fill_between(df['time'], 36, 50, color=colour_dict['aurora_purple'], alpha=0.25)
-            ax.plot(df['time'], df['state'], label=f'{friendly_name} {unit}', color=colour_dict['aurora_orange'])
+            ax.plot(df['time'], df['state'], label=f'{friendly_name} @ {df["state"].iloc[-1]:.0f} {unit}', color=colour_dict['aurora_orange'])
         if endpoint == 'sensor.first_air_quality_monitor_humidity':
             ax.set_ylim(df['state'].min() - 10, df['state'].max() + 10)
-            ax.plot(df['time'], df['state'], label=f'{friendly_name} {unit}', color=colour_dict['aurora_green'])
+            ax.plot(df['time'], df['state'], label=f'{friendly_name} @ {df["state"].iloc[-1]:.0f} {unit}', color=colour_dict['aurora_green'])
             ax.fill_between(df['time'], 0, 20, color=colour_dict['aurora_red'],alpha=0.25)
             ax.fill_between(df['time'], 20, 30, color=colour_dict['aurora_yellow'],alpha=0.25)
             ax.fill_between(df['time'], 30, 40, color=colour_dict['aurora_green'],alpha=0.25)
