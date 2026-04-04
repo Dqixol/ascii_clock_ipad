@@ -165,14 +165,14 @@ class weatherInfo:
             ax.legend(**legend_kwargs, ncol=2)
             ax.get_xaxis().set_visible(False)
         for ax in [axs[0,1]]:
-            ax.bar(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["precipitation"]*4.0, label="Prec. [mm/h]", color=colour_dict["frost_green"], width = 0.005)
+            ax.bar(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["precipitation"], label="Prec. [mm/h]", color=colour_dict["frost_green"], width = 0.005)
             ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["precipitation_probability"]/100.0, label="Perc. Prob.", color=colour_dict["frost_cyan"])
             ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["cloud_cover"]/100.0, label="Cloud Cover", color=colour_dict["snow_storm"])
             ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["relative_humidity_2m"]/100.0, label="Humidity", color=colour_dict["aurora_green"])
             ax.legend(**legend_kwargs, ncol=2)
             ax.get_xaxis().set_visible(False)
             ax.plot(self.df_forcast_smoothed["time"], np.ones_like(self.df_forcast_smoothed["time"]), color=colour_dict["snow_melt"], alpha=0.3, linestyle="--")
-            ax.set_ylim(0, 2 if self.df_forcast_smoothed["precipitation"].max() < 2 else self.df_forcast_smoothed["precipitation"].max() + 1)
+            ax.set_ylim(0, 2 if self.df_forcast_smoothed["precipitation"].max() < 1 else self.df_forcast_smoothed["precipitation"].max() + 1)
         for ax in [axs[1, 0]]:
             if self.df_air_quality["birch_pollen"].max() > 5: 
                 dominant_allergen = "birch_pollen"
