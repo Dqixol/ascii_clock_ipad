@@ -162,13 +162,14 @@ class weatherInfo:
             ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["apparent_temperature"], label="Feels Like [°C]", color=colour_dict["frost_cyan"])
             min_temp = min(self.df_forcast_smoothed["temperature_2m"].min(), self.df_forcast_smoothed["apparent_temperature"].min())
             max_temp = max(self.df_forcast_smoothed["temperature_2m"].max(), self.df_forcast_smoothed["apparent_temperature"].max())
-            ax.set_ylim(min_temp -5, max_temp + 5)
+            temp_range = max_temp - min_temp
+            ax.set_ylim(min_temp - temp_range * 0.1, max_temp + temp_range * 0.4)
             ax.legend(**legend_kwargs, ncol=2)
             ax.get_xaxis().set_visible(False)
         for ax in [axs[0,1]]:
             ax_perc = ax.twinx()
             pa = ax_perc.bar(self.df_forcast["time"], self.df_forcast["precipitation"], label="Prec. [mm/h]", color=colour_dict["frost_green"], width = 0.03)
-            ax_perc.set_ylim(0, self.df_forcast["precipitation"].max() * 2)
+            ax_perc.set_ylim(0, 0.8 if self.df_forcast["precipitation"].max() * 2 < 0.8 else self.df_forcast["precipitation"].max() * 2)
             pp = ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["precipitation_probability"]/100.0, label="Perc. Prob.", color=colour_dict["frost_cyan"])
             cc = ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["cloud_cover"]/100.0, label="Cloud Cover", color=colour_dict["snow_storm"])
             rh = ax.plot(self.df_forcast_smoothed["time"], self.df_forcast_smoothed["relative_humidity_2m"]/100.0, label="Humidity", color=colour_dict["aurora_green"])
@@ -183,32 +184,34 @@ class weatherInfo:
             dominant_allergens += [self.df_air_quality[allergen_cols].max().idxmax()]
             maxmax = self.df_air_quality[dominant_allergens].max().max()
             minmin = self.df_air_quality[dominant_allergens].min().min()
-            print("Dominant allergens:", dominant_allergens)
-            print("Max allergen level:", maxmax)
-            print("Min allergen level:", minmin)
             if maxmax == 0:
                 ax.text(0.5, 0.5, "No significant allergen forcasted", horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12)
             for dominant_allergen in dominant_allergens:
                 if self.df_air_quality[dominant_allergen].max() == 0:
                     continue
-                ax.plot(self.df_air_quality["time"], self.df_air_quality[dominant_allergen], label=f"{dominant_allergen.replace('_', ' ').title()} [grns/m³]")
+                if dominant_allergen == "birch_pollen":
+                    label = 'Birch'
+                else:
+                    label = f"{dominant_allergen.replace('_', ' ').title()} [grns/m³]"
+                ax.plot(self.df_air_quality["time"], self.df_air_quality[dominant_allergen], label=label)
             ax.legend(**legend_kwargs, ncol=2)
-            ax.set_ylim(minmin - 10 if minmin > 10 else 0, maxmax * 1.3)
+            allergen_range = maxmax - minmin
+            ax.set_ylim(0, maxmax + allergen_range * 0.4)
             ax.fill_between(self.df_air_quality["time"], 0, 30, color=colour_dict["aurora_green"], alpha=0.25)
             ax.fill_between(self.df_air_quality["time"], 30, 60, color=colour_dict["aurora_yellow"], alpha=0.25)
             ax.fill_between(self.df_air_quality["time"], 60, 150, color=colour_dict["aurora_red"], alpha=0.25)
-            if maxmax > 150:
-                ax.fill_between(self.df_air_quality["time"], 150, maxmax * 1.3, color=colour_dict["aurora_purple"], alpha=0.25)
+            ax.fill_between(self.df_air_quality["time"], 150, 1000, color=colour_dict["aurora_purple"], alpha=0.25)
 
         for ax in [axs[1, 1]]:
-            ax.set_ylim(self.df_air_quality["european_aqi"].min() - 10 if self.df_air_quality["european_aqi"].min() > 10 else 0, self.df_air_quality["european_aqi"].max() + 10)
+
+            ax.set_ylim(0, 100 if self.df_air_quality["european_aqi"].max() < 100 else self.df_air_quality["european_aqi"].max() * 1.4)
             ax.plot(self.df_air_quality["time"], self.df_air_quality["european_aqi"], label="European AQI", color = colour_dict["frost_cyan"])
             ax.legend(**legend_kwargs)
             ax.fill_between(self.df_air_quality["time"], 0, 50, color=colour_dict["frost_cyan"], alpha=0.25)
             ax.fill_between(self.df_air_quality["time"], 50, 100, color=colour_dict["aurora_green"], alpha=0.25)
             ax.fill_between(self.df_air_quality["time"], 100, 150, color=colour_dict["aurora_yellow"], alpha=0.25)
             ax.fill_between(self.df_air_quality["time"], 150, 250, color=colour_dict["aurora_red"], alpha=0.25)
-            ax.fill_between(self.df_air_quality["time"], 250, 500, color=colour_dict["aurora_purple"], alpha=0.25)
+            ax.fill_between(self.df_air_quality["time"], 250, 1000, color=colour_dict["aurora_purple"], alpha=0.25)
 
         fig.tight_layout()
         buf = StringIO()

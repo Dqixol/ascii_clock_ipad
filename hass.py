@@ -103,6 +103,7 @@ def getPlot(tz, hours=6):
         friendly_name = friendly_name.split('Monitor ')[-1].title()
         friendly_name = f'Indoor {friendly_name}'
         if endpoint == 'sensor.first_air_quality_monitor_air_quality_index':
+            friendly_name = "Indoor Air Quality Mark"
             aqi_now = df['state'].iloc[-1]
             aqi_band = AQI_dict[max([k for k in AQI_dict.keys() if k <= aqi_now])]
             ax.set_ylim(df['state'].min() - (df['state'].max() - df['state'].min()) * 0.2 if df['state'].min() > 10 else 0, 130)
@@ -127,7 +128,7 @@ def getPlot(tz, hours=6):
             voc_now = df['state'].iloc[-1]
             voc_band = VOC_dict[max([k for k in VOC_dict.keys() if k <= voc_now])]
             friendly_name = "Indoor VOC Index"
-            ax.set_ylim(df['state'].min() - 10 if df['state'].min() > 10 else 0, df['state'].max() + 10 if df['state'].max() < 90 else 100)
+            ax.set_ylim(0, df['state'].max() * 1.3)
             ax.plot(df['time'], df['state'], label=f'{friendly_name} @ {voc_band}', color = colour_dict['frost_green'])
             ax.fill_between(df['time'], 0, 10, color=colour_dict['aurora_green'], alpha=0.25)
             ax.fill_between(df['time'], 10, 20, color=colour_dict['aurora_yellow'], alpha=0.25)
