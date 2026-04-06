@@ -224,6 +224,7 @@
         }
 
         let currentTime = null;
+        let lastDateKey = null
 
         function syncTime(fit = false) {
             fetch("/timeText")
@@ -244,11 +245,21 @@
                 });
         }
 
+        function maybeUpdateDate() {
+            const dateKey = new Date().toDateString();
+            if (dateKey !== lastDateKey) {
+                lastDateKey = dateKey;
+                updateDate();
+                updateTitle();
+            }
+        }
+
         function tick() {
             if (!currentTime) return;
 
             currentTime.setSeconds(currentTime.getSeconds() + 1);
             renderTime();
+            maybeUpdateDate();
         }
 
         function renderTime() {
@@ -316,8 +327,6 @@
             fitForecastText();
         }
 
-        updateTitle();
-        updateDate();
         syncTime(true);
         updateCurrentCond();
         updateCurrentCondImage();
@@ -335,10 +344,8 @@
 
         setInterval(tick, 1000);
         setInterval(syncTime, 300000); // every 5 min
-        setInterval(updateTitle, 120000);            // Update title every 20 minutes
-        setInterval(updateDate, 600000);             // Update date every 10 minutes (to catch day change)
         setInterval(updateCurrentCond, 60000);       // Update current condition every minute
-        setInterval(updateCurrentCondImage, 300000); // Update current condition image every 5 min
+        setInterval(updateCurrentCondImage, 60000); // Update current condition image every minute
         setInterval(updateForecastCond24h, 1800000); // Update forecast every 30 minutes
         setInterval(updatePlot, 1800000);            // Update plot every 30 minutes
         setInterval(updateIndoorAirQualityPlot, 120000); // Update indoor air quality plot every 2 minutes

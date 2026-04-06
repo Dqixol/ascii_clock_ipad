@@ -56,7 +56,8 @@ AQI_dict = {
 }
 
 VOC_dict = {
-    10: 'Great',
+    0: 'Great',
+    10: 'Good',
     20: 'Moderate',
     30: 'Unhealthy',
     60: 'Hazardous',
@@ -124,7 +125,7 @@ def getPlot(tz, hours=6):
                 ax.fill_between(df['time'], 200, df['state'].max() * 1.3, color=colour_dict['aurora_purple'], alpha=0.25)
         if endpoint == 'sensor.first_air_quality_monitor_volatile_organic_compounds_index':
             voc_now = df['state'].iloc[-1]
-            voc_band = VOC_dict[min([k for k in VOC_dict.keys() if k >= voc_now])]
+            voc_band = VOC_dict[max([k for k in VOC_dict.keys() if k <= voc_now])]
             friendly_name = "Indoor VOC Index"
             ax.set_ylim(df['state'].min() - 10 if df['state'].min() > 10 else 0, df['state'].max() + 10 if df['state'].max() < 90 else 100)
             ax.plot(df['time'], df['state'], label=f'{friendly_name} @ {voc_band}', color = colour_dict['frost_green'])
