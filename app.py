@@ -1,4 +1,4 @@
-from time import time
+from time import time, sleep
 from flask import Flask, render_template, Response, send_file, jsonify
 
 import weather
@@ -13,7 +13,7 @@ while True:
     except Exception as e:
         print("Error fetching weather data:", e)
         print("Retrying in 5 seconds...")
-        time.sleep(5)
+        sleep(5)
 
 
 @app.route("/")
