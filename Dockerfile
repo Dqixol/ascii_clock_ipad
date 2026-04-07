@@ -1,8 +1,7 @@
-FROM python:3.14-alpine
+FROM python:latest
 
 WORKDIR /app
 
-RUN apk add --no-cache .build-deps gcc g++ musl-dev
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
