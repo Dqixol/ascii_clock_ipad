@@ -80,15 +80,25 @@ class weatherInfo:
         self.requestMaybe(test_failure=False)
 
     def requestWrapper(self, url, params):
-        response = requests.get(url, params=params)
-        if response.status_code != 200:
-            print(f"Error fetching from {url}: {response.status_code}")
+        now = datetime.datetime.now(tz=self.pytz)
+        print(f"{now.strftime('%Y-%m-%d %H:%M:%S')}: Requesting {url} with params")
+        try:
+            response = requests.get(url, params=params)
+            if response.status_code != 200:
+                print(f"Error fetching from {url}: {response.status_code}")
+                data = {
+                    "error_code" : response.status_code,
+                    "error_message" : response.text
+                }
+            else:
+                data = response.json()
+        except Exception as e:
+            print(f"Exception during request to {url}:")
+            print(e)
             data = {
-                "error_code" : response.status_code,
-                "error_message" : response.text
+                "error_code": "exception",
+                "error_message": str(e)
             }
-        else:
-            data = response.json()
         return data
 
     def requestMaybe(self, test_failure=False):
