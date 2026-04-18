@@ -245,21 +245,11 @@
                 });
         }
 
-        function maybeUpdateDate() {
-            const dateKey = new Date().toDateString();
-            if (dateKey !== lastDateKey) {
-                lastDateKey = dateKey;
-                updateDate();
-                updateTitle();
-            }
-        }
-
         function tick() {
             if (!currentTime) return;
 
             currentTime.setSeconds(currentTime.getSeconds() + 1);
             renderTime();
-            maybeUpdateDate();
         }
 
         function renderTime() {
@@ -328,6 +318,8 @@
         }
 
         syncTime(true);
+        updateTitle();
+        updateDate();
         updateCurrentCond();
         updateCurrentCondImage();
         updateForecastCond24h();
@@ -343,6 +335,8 @@
         });
 
         setInterval(tick, 1000);
+        setInterval(updateTitle, 3600000); // every hour
+        setInterval(updateDate, 3600000);  // every hour
         setInterval(syncTime, 300000); // every 5 min
         setInterval(updateCurrentCond, 60000);       // Update current condition every minute
         setInterval(updateCurrentCondImage, 60000); // Update current condition image every minute

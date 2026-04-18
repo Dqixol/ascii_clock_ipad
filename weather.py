@@ -215,6 +215,11 @@ class weatherInfo:
                 max_temp = max(self.df_forcast_smoothed["temperature_2m"].max(), self.df_forcast_smoothed["apparent_temperature"].max())
                 temp_range = max_temp - min_temp
                 ax.set_ylim(min_temp - temp_range * 0.1, max_temp + temp_range * 0.4)
+                ax.fill_between(self.df_forcast_smoothed["time"], min_temp - temp_range * 0.1,  10, color=colour_dict['frost_dblue'], alpha=0.25)
+                ax.fill_between(self.df_forcast_smoothed["time"], 10, 15, color=colour_dict['frost_cyan'], alpha=0.25)
+                ax.fill_between(self.df_forcast_smoothed["time"], 15, 20, color=colour_dict['aurora_green'], alpha=0.25)
+                ax.fill_between(self.df_forcast_smoothed["time"], 20, 25, color=colour_dict['aurora_yellow'], alpha=0.25)
+                ax.fill_between(self.df_forcast_smoothed["time"], 25, max_temp + temp_range * 0.4, color=colour_dict['aurora_red'], alpha=0.25)
                 ax.legend(**legend_kwargs, ncol=2)
                 ax.get_xaxis().set_visible(False)
             for ax in [axs[0,1]]:

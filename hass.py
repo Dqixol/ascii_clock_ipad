@@ -106,7 +106,7 @@ def getPlot(tz, hours=6):
             friendly_name = "Indoor Air Quality Mark"
             aqi_now = df['state'].iloc[-1]
             aqi_band = AQI_dict[max([k for k in AQI_dict.keys() if k <= aqi_now])]
-            ax.set_ylim(df['state'].min() - (df['state'].max() - df['state'].min()) * 0.2 if df['state'].min() > 10 else 0, 130)
+            ax.set_ylim(df['state'].min() - 10 if df['state'].min() > 10 else 0, df['state'].max() *1.3)
             ax.plot(df['time'], df['state'], label=f'{friendly_name} @ {aqi_band}', color = colour_dict['snow_storm'])
             ax.fill_between(df['time'], 90,  100, color=colour_dict['frost_cyan'], alpha=0.25)
             ax.fill_between(df['time'], 80, 90, color=colour_dict['aurora_green'], alpha=0.25)
