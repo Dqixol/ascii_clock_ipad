@@ -14,7 +14,6 @@ hourly_doi = [
     'cloud_cover_mid',
     'cloud_cover_high',
     'visibility',
-    'evapotranspiration',
     'et0_fao_evapotranspiration',
     'vapour_pressure_deficit',
     'wind_speed_10m',
